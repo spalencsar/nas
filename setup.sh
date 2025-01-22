@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# NAS Setup Script - Version 3.4
+# NAS Setup Script - Version 1.0
 #
 # This script automates the setup of a NAS system with various services.
 # It is designed to run on multiple Linux distributions, including:
