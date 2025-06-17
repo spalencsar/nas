@@ -43,8 +43,8 @@ For feature requests, please provide:
 
 1. **Fork & Clone**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/nasscript.git
-   cd nasscript/nas
+   git clone https://github.com/YOUR_USERNAME/nas.git
+   cd nas
    ```
 
 2. **Create Feature Branch**

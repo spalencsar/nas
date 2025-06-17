@@ -90,8 +90,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/noordjonge/nasscript.git
-cd nasscript/nas
+git clone https://github.com/spalencsar/nas.git
+cd nas
 ```
 
 ### 2. Make Script Executable
@@ -331,8 +331,8 @@ We welcome contributions to improve this project! Please read [CONTRIBUTING.md](
 ## 📞 Support
 
 ### Community Support
-1. [Browse Wiki](https://github.com/noordjonge/nasscript/wiki)
-2. [Search existing issues](https://github.com/noordjonge/nasscript/issues)
+1. [Browse Wiki](https://github.com/spalencsar/nas/wiki)
+2. [Search existing issues](https://github.com/spalencsar/nas/issues)
 3. Create new issue if needed
 
 ### Professional Support
@@ -352,8 +352,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👨‍💻 Author
 
 **Sebastian Palencsár**
-- GitHub: [@noordjonge](https://github.com/noordjonge)
-- Project Repository: [NAS Script](https://github.com/noordjonge/nasscript)
+- GitHub: [@spalencsar](https://github.com/spalencsar)
+- Project Repository: [NAS Script](https://github.com/spalencsar/nas)
 
 ---
 
