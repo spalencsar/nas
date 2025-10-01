@@ -3,7 +3,7 @@
 # Default configuration values for NAS setup script
 
 # Script metadata
-SCRIPT_VERSION="2.1.0"
+SCRIPT_VERSION="2.1.1"
 SCRIPT_NAME="NAS Setup Script"
 SCRIPT_AUTHOR="Sebastian Palencsár"
 
