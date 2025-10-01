@@ -1,10 +1,23 @@
-# Contributing to NAS Setup Script v2.0
+# Contributing to NAS Setup Script v2.1
 
 Thank you for considering contributing to the NAS Setup Script! This project has evolved into a professional-grade tool, and we welcome contributions that maintain this high standard.
 
-## 🎯 Project Vision
+## 🎯 Project**Test Environment Setup**
 
-Our goal is to provide a **production-ready**, **enterprise-grade** NAS setup solution that follows software engineering best practices while remaining accessible to both novice and expert users.
+**Recommended Testing:**
+```bash
+# Use VirtualBox/Proxmox with these distributions:
+- Ubuntu 24.04 LTS (or newer)
+- Debian 12 (Bookworm)
+- Fedora 41 (or newer)
+- Arch Linux (rolling release)
+- openSUSE Leap 15.6 (or newer)
+
+# Minimum VM specs:
+- 4GB RAM (recommended for Docker workloads)
+- 30GB disk (increased for modern Docker images)
+- IPv4/IPv6 dual-stack network access
+```l is to provide a **production-ready**, **enterprise-grade** NAS setup solution that follows software engineering best practices while remaining accessible to both novice and expert users. Version 2.1 brings full 2025 compatibility with modern distributions, IPv6 support, and enhanced security features.
 
 ## 📋 Contribution Guidelines
 
@@ -13,19 +26,20 @@ Our goal is to provide a **production-ready**, **enterprise-grade** NAS setup so
 When reporting bugs, please use our structured issue template:
 
 **Required Information:**
-- **Environment:** OS distribution, version, hardware specs
+- **Environment:** OS distribution, version, hardware specs (IPv4/IPv6 configuration)
 - **Script Version:** Output of `./setup.sh --version`
 - **Clear Title:** Descriptive summary of the issue
 - **Reproduction Steps:** Detailed steps to reproduce
 - **Expected vs Actual Behavior:** What should happen vs what happens
 - **Logs:** Relevant excerpts from `/var/log/nas_setup.log`
 - **Configuration:** Your `/etc/nas_setup.conf` (sanitized)
+- **Network:** IPv4/IPv6 connectivity details
 
 **Example:**
 ```
-Title: "Firewall configuration fails on Fedora 37"
-Environment: Fedora 37, 4GB RAM, VirtualBox VM
-Steps: 1. Run setup.sh, 2. Select all services, 3. Firewall config step fails
+Title: "IPv6 firewall configuration fails on Ubuntu 24.04"
+Environment: Ubuntu 24.04 LTS, 8GB RAM, IPv6-enabled network
+Steps: 1. Run setup.sh, 2. Select all services, 3. IPv6 firewall config step fails
 Logs: [Include error from log file]
 ```
 
@@ -58,6 +72,10 @@ For feature requests, please provide:
    ```bash
    # Make scripts executable
    chmod +x setup.sh tests/unit_tests.sh
+   
+   # Install basic dependencies (if needed)
+   # bc calculator for version comparisons
+   # curl/wget for downloads
    
    # Run unit tests
    ./tests/unit_tests.sh
@@ -125,7 +143,7 @@ handle_error sudo systemctl start service
 **Variable Naming:**
 ```bash
 # Constants: UPPER_CASE
-readonly SCRIPT_VERSION="2.0.0"
+readonly SCRIPT_VERSION="2.1.0"
 
 # Global variables: UPPER_CASE  
 DISTRO=""
@@ -134,6 +152,10 @@ CONFIG_FILE="/etc/nas_setup.conf"
 # Local variables: lower_case
 local username="$1"
 local config_path="/tmp/config"
+
+# Function-based lookups (v2.1+)
+local pkg_manager=$(get_package_manager "$DISTRO")
+local update_cmd=$(get_update_command "$DISTRO")
 ```
 
 ### Input Validation Requirements
@@ -162,12 +184,19 @@ validate_custom_input() {
 - Review by maintainer
 - Testing in isolated environment
 - Documentation of security implications
+- IPv6 security considerations (v2.1+)
 
 **Security best practices:**
-- Never log sensitive information (passwords, keys)
-- Validate all external input
+- Never log sensitive information (passwords, keys, tokens)
+- Validate all external input including IPv6 addresses
 - Use parameterized commands
 - Implement principle of least privilege
+- Use modern cryptographic standards (Ed25519 SSH keys)
+- Enable audit logging for security events
+- Consider Mandatory Access Control (AppArmor/SELinux)
+- Test IPv6 firewall rules thoroughly
+
+**For security vulnerabilities, see our [Security Policy](SECURITY.md).**
 
 ### Testing Requirements
 
@@ -214,16 +243,20 @@ test_new_function() {
 
 **CHANGELOG Updates:**
 ```markdown
-## [2.1.0] - 2025-06-17
-### Added
-- New feature description
-- Another enhancement
+## [2.1.0] - 2025-10-01
+### 🚀 2025 Compatibility Update
+#### Added
+- IPv6 support throughout the system
+- Modern Docker ecosystem with Compose plugin
+- Enhanced security with Ed25519 SSH and auditd
 
-### Changed  
-- Modified behavior description
+#### Changed
+- Updated distribution support to latest versions
+- Modernized package management and GPG handling
 
-### Fixed
-- Bug fix description
+#### Security
+- IPv6 security considerations
+- Enhanced audit logging and MAC integration
 ```
 
 ## 🧪 Testing Strategy
@@ -303,18 +336,19 @@ We follow [Semantic Versioning](https://semver.org/):
 
 ### Release Checklist
 
-- [ ] All tests pass
-- [ ] Documentation updated
-- [ ] CHANGELOG.md updated
-- [ ] Version bumped in relevant files
-- [ ] Security review completed
-- [ ] Performance benchmarks acceptable
+- [ ] All tests pass (including IPv6 validation)
+- [ ] Documentation updated with new features
+- [ ] CHANGELOG.md updated with 2025 changes
+- [ ] Version bumped in relevant files (v2.1.x)
+- [ ] Security review completed (Ed25519, auditd, MAC)
+- [ ] IPv6 functionality tested on dual-stack networks
+- [ ] Performance benchmarks acceptable with modern distributions
 
 ## 🤝 Community
 
 ### Code of Conduct
 
-We follow the [Contributor Covenant Code of Conduct](https://www.contributor-covenant.org/version/2/0/code_of_conduct/).
+We follow the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md) for all community interactions.
 
 ### Communication
 

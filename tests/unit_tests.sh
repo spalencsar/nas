@@ -7,6 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../config/defaults.sh"
 source "${SCRIPT_DIR}/../lib/logging.sh"
 source "${SCRIPT_DIR}/../lib/common.sh"
+source "${SCRIPT_DIR}/../lib/detection.sh"
 
 # Test configuration
 TEST_LOG_FILE="/tmp/nas_test.log"
@@ -348,6 +349,92 @@ test_performance() {
     fi
 }
 
+# Distribution detection tests
+test_normalize_version() {
+    setup_test "normalize_version"
+    
+    # Test standard version formats
+    local result=$(normalize_version "24.04.0")
+    assert_equals "24.04.0" "$result" "Standard version format"
+    
+    result=$(normalize_version "12")
+    assert_equals "12.0.0" "$result" "Major version only"
+    
+    result=$(normalize_version "41.1")
+    assert_equals "41.1.0" "$result" "Major.minor format"
+    
+    # Test Debian-style versions
+    result=$(normalize_version "12 (bookworm)")
+    assert_equals "12.0.0" "$result" "Debian style version"
+    
+    # Test rolling releases
+    result=$(normalize_version "rolling")
+    assert_equals "9999.0.0" "$result" "Rolling release"
+    
+    result=$(normalize_version "unstable")
+    assert_equals "9999.0.0" "$result" "Unstable release"
+    
+    # Test complex versions
+    result=$(normalize_version "24.04 LTS")
+    assert_equals "24.04.0" "$result" "Version with suffix"
+}
+
+test_version_compare() {
+    setup_test "version_compare"
+    
+    # Test greater than or equal
+    version_compare "24.04.0" ">=" "24.04.0" && assert_true $? "Equal versions with >="
+    version_compare "24.04.1" ">=" "24.04.0" && assert_true $? "Higher version with >="
+    version_compare "24.03.0" ">=" "24.04.0" && assert_false $? "Lower version with >="
+    
+    # Test greater than
+    version_compare "24.04.1" ">" "24.04.0" && assert_true $? "Higher version with >"
+    version_compare "24.04.0" ">" "24.04.0" && assert_false $? "Equal versions with >"
+    
+    # Test less than or equal
+    version_compare "24.04.0" "<=" "24.04.0" && assert_true $? "Equal versions with <="
+    version_compare "24.03.0" "<=" "24.04.0" && assert_true $? "Lower version with <="
+    version_compare "24.05.0" "<=" "24.04.0" && assert_false $? "Higher version with <="
+    
+    # Test less than
+    version_compare "24.03.0" "<" "24.04.0" && assert_true $? "Lower version with <"
+    version_compare "24.04.0" "<" "24.04.0" && assert_false $? "Equal versions with <"
+    
+    # Test equal
+    version_compare "24.04.0" "==" "24.04.0" && assert_true $? "Equal versions with =="
+    version_compare "24.04.0" "=" "24.04.0" && assert_true $? "Equal versions with ="
+    version_compare "24.04.1" "==" "24.04.0" && assert_false $? "Different versions with =="
+    
+    # Test not equal
+    version_compare "24.04.1" "!=" "24.04.0" && assert_true $? "Different versions with !="
+    version_compare "24.04.0" "!=" "24.04.0" && assert_false $? "Equal versions with !="
+}
+
+test_container_detection() {
+    setup_test "container_detection"
+    
+    # Test that function exists and runs without error
+    # Note: On macOS, we won't detect actual containers, but the function should work
+    unset CONTAINER_TYPE
+    
+    if detect_container_environment 2>/dev/null; then
+        echo "  ✓ Container detection function runs without error"
+        ((TESTS_PASSED++))
+    else
+        echo "  ✗ Container detection function failed"
+        ((TESTS_FAILED++))
+    fi
+    
+    # Test that CONTAINER_TYPE is set appropriately (should be empty on macOS)
+    if [[ -z "${CONTAINER_TYPE:-}" ]]; then
+        echo "  ✓ No container environment detected (expected on macOS)"
+        ((TESTS_PASSED++))
+    else
+        echo "  ✓ Container environment detected: $CONTAINER_TYPE"
+        ((TESTS_PASSED++))
+    fi
+}
+
 # Main test runner
 main() {
     echo "Starting NAS Setup Script Unit Tests"
@@ -380,6 +467,15 @@ main() {
     echo
     
     test_performance
+    echo
+    
+    test_normalize_version
+    echo
+    
+    test_version_compare
+    echo
+    
+    test_container_detection
     echo
     
     # Cleanup

@@ -1,82 +1,47 @@
 #!/bin/bash
 
-# portainer.sh - Script to install Portainer on various Linux distributions
+# Portainer installation and configuration script (2025-ready)
 
-# Function to install Portainer on Ubuntu
-install_portainer_ubuntu() {
-    sudo apt-get update
-    sudo apt-get install -y docker.io
-    sudo systemctl start docker
-    sudo systemctl enable docker
+install_portainer() {
+    log_info "Installing Portainer..."
+
+    # Docker muss installiert und aktiv sein
+    if ! command -v docker &>/dev/null; then
+        log_error "Docker ist nicht installiert. Bitte Docker zuerst installieren."
+        exit 1
+    fi
+
+    # Portainer-Volume anlegen
     sudo docker volume create portainer_data
-    sudo docker run -d -p 9000:9000 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
+
+    # Vorherigen Portainer-Container stoppen und entfernen, falls vorhanden
+    if sudo docker ps -a --format '{{.Names}}' | grep -q '^portainer$'; then
+        sudo docker stop portainer || true
+        sudo docker rm portainer || true
+    fi
+
+    # Aktuelles Portainer-Image holen
+    sudo docker pull portainer/portainer-ce:latest
+
+    # Portainer starten (Web: Port 9000, Agent: 8000)
+    sudo docker run -d \
+        --name portainer \
+        --restart=always \
+        -p 9000:9000 \
+        -p 9443:9443 \
+        -v /var/run/docker.sock:/var/run/docker.sock \
+        -v portainer_data:/data \
+        portainer/portainer-ce:latest
+
+    log_success "Portainer wurde erfolgreich installiert und läuft auf Port 9000 (HTTP) und 9443 (HTTPS)."
 }
 
-# Function to install Portainer on Debian
-install_portainer_debian() {
-    sudo apt-get update
-    sudo apt-get install -y docker.io
-    sudo systemctl start docker
-    sudo systemctl enable docker
-    sudo docker volume create portainer_data
-    sudo docker run -d -p 9000:9000 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
-}
-
-# Function to install Portainer on Fedora
-install_portainer_fedora() {
-    sudo dnf -y update
-    sudo dnf -y install docker
-    sudo systemctl start docker
-    sudo systemctl enable docker
-    sudo docker volume create portainer_data
-    sudo docker run -d -p 9000:9000 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
-}
-
-# Function to install Portainer on Arch Linux
-install_portainer_arch() {
-    sudo pacman -Syu --noconfirm
-    sudo pacman -S --noconfirm docker
-    sudo systemctl start docker
-    sudo systemctl enable docker
-    sudo docker volume create portainer_data
-    sudo docker run -d -p 9000:9000 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
-}
-
-# Function to install Portainer on openSUSE
-install_portainer_opensuse() {
-    sudo zypper refresh
-    sudo zypper install -y docker
-    sudo systemctl start docker
-    sudo systemctl enable docker
-    sudo docker volume create portainer_data
-    sudo docker run -d -p 9000:9000 --name portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
-}
-
-# Main script logic to detect the distribution and call the appropriate function
-if [ -f /etc/os-release ]; then
-    . /etc/os-release
-    case "$ID" in
-        ubuntu)
-            install_portainer_ubuntu
-            ;;
-        debian)
-            install_portainer_debian
-            ;;
-        fedora)
-            install_portainer_fedora
-            ;;
-        arch)
-            install_portainer_arch
-            ;;
-        opensuse)
-            install_portainer_opensuse
-            ;;
-        *)
-            echo "Unsupported distribution: $ID"
-            exit 1
-            ;;
-    esac
-else
-    echo "Cannot detect the operating system."
-    exit 1
+# Logging-Funktionen bereitstellen, falls nicht vorhanden
+if ! command -v log_info &>/dev/null; then
+    log_info() { echo "[INFO] $1"; }
+    log_success() { echo "[SUCCESS] $1"; }
+    log_error() { echo "[ERROR] $1" >&2; }
 fi
+
+# Hauptlogik
+install_portainer

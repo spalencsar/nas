@@ -23,6 +23,9 @@ configure_ufw() {
     # Reset UFW to defaults
     sudo ufw --force reset
     
+    # Enable IPv6 support
+    sudo sed -i 's/IPV6=no/IPV6=yes/' /etc/default/ufw
+    
     # Set default policies
     sudo ufw default deny incoming
     sudo ufw default allow outgoing
@@ -58,6 +61,10 @@ configure_firewalld() {
     
     # Set default zone
     sudo firewall-cmd --set-default-zone=public
+    
+    # Ensure IPv6 support is active (firewalld supports it natively)
+    sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv6" accept'
+    sudo firewall-cmd --reload
     
     return 0
 }
@@ -119,8 +126,12 @@ add_ufw_rules() {
     
     # Local network communication
     local local_networks=("192.168.0.0/16" "10.0.0.0/8" "172.16.0.0/12")
+    local local_ipv6_networks=("fe80::/10" "fc00::/7")
     for network in "${local_networks[@]}"; do
-        sudo ufw allow from "$network" comment "Local network"
+        sudo ufw allow from "$network" comment "Local IPv4 network"
+    done
+    for network in "${local_ipv6_networks[@]}"; do
+        sudo ufw allow from "$network" comment "Local IPv6 network"
     done
     
     log_success "UFW rules configured successfully"
@@ -177,6 +188,13 @@ add_firewalld_rules() {
         sudo firewall-cmd --permanent --add-port=8080/tcp
     fi
     
+    # Local network communication (IPv4 and IPv6)
+    sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="192.168.0.0/16" accept'
+    sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="10.0.0.0/8" accept'
+    sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv4" source address="172.16.0.0/12" accept'
+    sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv6" source address="fe80::/10" accept'
+    sudo firewall-cmd --permanent --add-rich-rule='rule family="ipv6" source address="fc00::/7" accept'
+    
     # Reload firewalld
     sudo firewall-cmd --reload
     
@@ -216,7 +234,7 @@ configure_ip_blocking() {
     # Create script for manual IP blocking
     sudo tee /usr/local/bin/block-ip > /dev/null <<'EOF'
 #!/bin/bash
-# Script to block IP addresses
+# Script to block IP addresses (IPv4 and IPv6)
 
 if [[ $# -ne 1 ]]; then
     echo "Usage: $0 <IP_ADDRESS>"
@@ -225,10 +243,17 @@ fi
 
 IP="$1"
 
-# Validate IP address
-if [[ ! $IP =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-    echo "Error: Invalid IP address format"
+# Validate IP address (IPv4 or IPv6)
+if [[ ! $IP =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] && [[ ! $IP =~ ^([0-9a-fA-F:]+:+)+[0-9a-fA-F]*$ ]]; then
+    echo "Error: Invalid IP address format (IPv4 or IPv6)"
     exit 1
+fi
+
+# Determine family
+if [[ $IP =~ : ]]; then
+    FAMILY="ipv6"
+else
+    FAMILY="ipv4"
 fi
 
 # Block IP based on firewall type
@@ -236,7 +261,7 @@ if command -v ufw &>/dev/null; then
     ufw deny from "$IP"
     echo "IP $IP blocked via UFW"
 elif command -v firewall-cmd &>/dev/null; then
-    firewall-cmd --permanent --add-rich-rule="rule family='ipv4' source address='$IP' reject"
+    firewall-cmd --permanent --add-rich-rule="rule family='$FAMILY' source address='$IP' reject"
     firewall-cmd --reload
     echo "IP $IP blocked via firewalld"
 else
@@ -253,7 +278,7 @@ EOF
     # Create script for unblocking IP addresses
     sudo tee /usr/local/bin/unblock-ip > /dev/null <<'EOF'
 #!/bin/bash
-# Script to unblock IP addresses
+# Script to unblock IP addresses (IPv4 and IPv6)
 
 if [[ $# -ne 1 ]]; then
     echo "Usage: $0 <IP_ADDRESS>"
@@ -262,10 +287,17 @@ fi
 
 IP="$1"
 
-# Validate IP address
-if [[ ! $IP =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-    echo "Error: Invalid IP address format"
+# Validate IP address (IPv4 or IPv6)
+if [[ ! $IP =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] && [[ ! $IP =~ ^([0-9a-fA-F:]+:+)+[0-9a-fA-F]*$ ]]; then
+    echo "Error: Invalid IP address format (IPv4 or IPv6)"
     exit 1
+fi
+
+# Determine family
+if [[ $IP =~ : ]]; then
+    FAMILY="ipv6"
+else
+    FAMILY="ipv4"
 fi
 
 # Unblock IP based on firewall type
@@ -273,7 +305,7 @@ if command -v ufw &>/dev/null; then
     ufw delete deny from "$IP"
     echo "IP $IP unblocked via UFW"
 elif command -v firewall-cmd &>/dev/null; then
-    firewall-cmd --permanent --remove-rich-rule="rule family='ipv4' source address='$IP' reject"
+    firewall-cmd --permanent --remove-rich-rule="rule family='$FAMILY' source address='$IP' reject"
     firewall-cmd --reload
     echo "IP $IP unblocked via firewalld"
 else

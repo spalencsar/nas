@@ -25,14 +25,15 @@ install_jellyfin() {
     case $DISTRO in
         ubuntu|debian)
             handle_error sudo apt-get update
-            handle_error sudo apt-get install -y apt-transport-https software-properties-common
-            handle_error wget -O - https://repo.jellyfin.org/jellyfin_team.gpg.key | sudo apt-key add -
-            handle_error sudo add-apt-repository "deb [arch=$(dpkg --print-architecture)] https://repo.jellyfin.org/$(lsb_release -cs) main"
+            handle_error sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+            handle_error curl -fsSL https://repo.jellyfin.org/jellyfin_team.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/jellyfin.gpg
+            handle_error echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/jellyfin.gpg] https://repo.jellyfin.org/$(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/jellyfin.list > /dev/null
             handle_error sudo apt-get update
             handle_error sudo apt-get install -y jellyfin
             ;;
         fedora)
-            handle_error sudo dnf install -y https://repo.jellyfin.org/releases/server/fedora/releases/jellyfin-server.rpm
+            handle_error sudo dnf config-manager --add-repo https://repo.jellyfin.org/releases/server/fedora/jellyfin.repo
+            handle_error sudo dnf install -y jellyfin
             ;;
         arch)
             handle_error sudo pacman -S --noconfirm jellyfin

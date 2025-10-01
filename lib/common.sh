@@ -198,7 +198,7 @@ check_command() {
 }
 
 install_dependencies() {
-    local dependencies=("curl" "wget" "git" "ufw" "htop" "tree")
+    local dependencies=("curl" "wget" "git" "ufw" "htop" "tree" "bc")
     local missing_deps=()
     
     log_info "Checking system dependencies..."
@@ -267,7 +267,8 @@ save_config() {
     
     if [[ -f "${CONFIG_FILE}" ]]; then
         if grep -q "^${key}=" "${CONFIG_FILE}"; then
-            sed -i "s/^${key}=.*/${key}=${value}/" "${CONFIG_FILE}"
+            # Use sed with proper escaping
+            sed -i.bak "s|^${key}=.*|${key}=${value}|" "${CONFIG_FILE}" && rm -f "${CONFIG_FILE}.bak"
         else
             echo "${key}=${value}" >> "${CONFIG_FILE}"
         fi
@@ -332,8 +333,8 @@ get_system_info() {
 check_ubuntu_version() {
     if [[ "$DISTRO" == "ubuntu" ]]; then
         local version_major=$(echo "$DISTRO_VERSION" | cut -d'.' -f1)
-        if [[ $version_major -lt 20 ]]; then
-            log_warning "Ubuntu version $DISTRO_VERSION is not officially supported. Minimum: 20.04"
+        if [[ $version_major -lt 24 ]]; then
+            log_warning "Ubuntu version $DISTRO_VERSION is not officially supported. Minimum: 24.04"
             if ! ask_yes_no "Continue anyway?" "n"; then
                 exit 1
             fi

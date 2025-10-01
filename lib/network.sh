@@ -59,7 +59,7 @@ configure_netplan() {
         return 1
     fi
     
-    # Create new netplan configuration
+    # Create new netplan configuration (IPv4 and IPv6)
     cat <<EOF | sudo tee "$netplan_file" > /dev/null
 network:
   version: 2
@@ -71,7 +71,7 @@ network:
         - to: default
           via: $gateway_ip
       nameservers:
-        addresses: [$dns_ip, 8.8.8.8]
+        addresses: [$dns_ip, 8.8.8.8, 2001:4860:4860::8888]
       dhcp4: false
       dhcp6: false
 EOF

@@ -4,11 +4,11 @@
 #
 # This script automates the setup of a NAS system with various services.
 # It is designed to run on multiple Linux distributions, including:
-# - Ubuntu 20.04+
-# - Debian 11+
-# - Fedora 35+
+# - Ubuntu 24.04+
+# - Debian 12+
+# - Fedora 41+
 # - Arch Linux
-# - openSUSE Leap 15.4+
+# - openSUSE Leap 15.6+
 #
 # Disclaimer:
 # This script is provided "as is", without warranty of any kind, express or implied,
@@ -34,6 +34,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/config/defaults.sh"
 source "${SCRIPT_DIR}/lib/logging.sh"
 source "${SCRIPT_DIR}/lib/common.sh"
+source "${SCRIPT_DIR}/lib/detection.sh"
 source "${SCRIPT_DIR}/lib/network.sh"
 source "${SCRIPT_DIR}/lib/docker.sh"
 source "${SCRIPT_DIR}/lib/security.sh"
@@ -82,40 +83,140 @@ cleanup_on_exit() {
 
 trap cleanup_on_exit SIGINT SIGTERM
 
-# Detect Linux distribution with version check
+# Detect Linux distribution with comprehensive fallback methods
 detect_distro() {
+    local detected_distro=""
+    local detected_version=""
+    local detected_codename=""
+    local detection_method=""
+
+    log_debug "Starting distribution detection..."
+
+    # Method 1: /etc/os-release (primary method for modern systems)
     if [[ -f /etc/os-release ]]; then
-        source /etc/os-release
-        DISTRO=$ID
-        DISTRO_VERSION=$VERSION_ID
-        DISTRO_CODENAME=${VERSION_CODENAME:-""}
-        
-        log_info "Detected distribution: $PRETTY_NAME"
-        
-        # Validate supported distribution
-        if [[ ! " ${SUPPORTED_DISTROS[*]} " =~ " ${DISTRO} " ]]; then
-            log_error "Unsupported Linux distribution: $DISTRO"
-            log_info "Supported distributions: ${SUPPORTED_DISTROS[*]}"
-            exit 1
+        source /etc/os-release 2>/dev/null || true
+        detected_distro=${ID,,}  # Convert to lowercase
+        detected_version=$VERSION_ID
+        detected_codename=${VERSION_CODENAME:-${UBUNTU_CODENAME:-""}}
+        detection_method="/etc/os-release"
+        log_debug "Detected via /etc/os-release: $PRETTY_NAME"
+    fi
+
+    # Method 2: /etc/redhat-release (fallback for RHEL/CentOS/Fedora)
+    if [[ -z "$detected_distro" ]] && [[ -f /etc/redhat-release ]]; then
+        local redhat_info=$(cat /etc/redhat-release)
+        if [[ $redhat_info =~ ^(CentOS|Red Hat Enterprise|Fedora) ]]; then
+            detected_distro="fedora"
+            detected_version=$(echo "$redhat_info" | grep -oP '\d+\.\d+' | head -1)
+            detection_method="/etc/redhat-release"
+            log_debug "Detected via /etc/redhat-release: $redhat_info"
         fi
-        
-        # Check minimum versions
-        case $DISTRO in
-            ubuntu)
-                if [[ $(echo "$DISTRO_VERSION >= 20.04" | bc -l) -eq 0 ]]; then
-                    log_warning "Ubuntu version $DISTRO_VERSION is not officially supported. Minimum: 20.04"
-                fi
-                ;;
-            debian)
-                if [[ ${DISTRO_VERSION%%.*} -lt 11 ]]; then
-                    log_warning "Debian version $DISTRO_VERSION is not officially supported. Minimum: 11"
-                fi
-                ;;
-        esac
-    else
-        log_error "Cannot detect Linux distribution. /etc/os-release not found."
+    fi
+
+    # Method 3: /etc/debian_version (fallback for Debian/Ubuntu)
+    if [[ -z "$detected_distro" ]] && [[ -f /etc/debian_version ]]; then
+        local debian_version=$(cat /etc/debian_version)
+        if [[ -f /etc/lsb-release ]]; then
+            source /etc/lsb-release 2>/dev/null || true
+            detected_distro=${DISTRIB_ID,,}
+            detected_version=$DISTRIB_RELEASE
+            detected_codename=${DISTRIB_CODENAME:-""}
+            detection_method="/etc/lsb-release"
+        else
+            # Pure Debian system
+            detected_distro="debian"
+            detected_version=$debian_version
+            detection_method="/etc/debian_version"
+        fi
+        log_debug "Detected via Debian method: $detected_distro $detected_version"
+    fi
+
+    # Method 4: lsb_release command (fallback)
+    if [[ -z "$detected_distro" ]] && command -v lsb_release >/dev/null 2>&1; then
+        detected_distro=$(lsb_release -si 2>/dev/null | tr '[:upper:]' '[:lower:]')
+        detected_version=$(lsb_release -sr 2>/dev/null)
+        detected_codename=$(lsb_release -sc 2>/dev/null)
+        detection_method="lsb_release command"
+        log_debug "Detected via lsb_release command: $detected_distro $detected_version"
+    fi
+
+    # Method 5: uname and manual detection (last resort)
+    if [[ -z "$detected_distro" ]]; then
+        if [[ -f /etc/arch-release ]]; then
+            detected_distro="arch"
+            detected_version="rolling"
+            detection_method="/etc/arch-release"
+        elif [[ -f /etc/gentoo-release ]]; then
+            detected_distro="gentoo"
+            detected_version=$(cat /etc/gentoo-release | grep -oP '\d+\.\d+' | head -1)
+            detection_method="/etc/gentoo-release"
+        elif uname -a | grep -qi "opensuse"; then
+            detected_distro="opensuse"
+            detected_version="unknown"
+            detection_method="uname opensuse"
+        fi
+        log_debug "Detected via fallback method: $detected_distro"
+    fi
+
+    # Validate detection
+    if [[ -z "$detected_distro" ]]; then
+        log_error "Failed to detect Linux distribution using all available methods"
+        log_error "Please check your system and ensure it's a supported Linux distribution"
+        log_error "Supported: ${SUPPORTED_DISTROS[*]}"
         exit 1
     fi
+
+    # Normalize distribution names
+    case $detected_distro in
+        ubuntu|debian|fedora|arch|opensuse)
+            DISTRO=$detected_distro
+            ;;
+        "red hat enterprise linux server"|"rhel")
+            DISTRO="fedora"  # Treat RHEL as Fedora for package management
+            ;;
+        "centos linux"|"centos")
+            DISTRO="fedora"  # CentOS uses same package manager as Fedora
+            ;;
+        *)
+            # Check if it's a known variant
+            if [[ " ${SUPPORTED_DISTROS[*]} " =~ " ${detected_distro} " ]]; then
+                DISTRO=$detected_distro
+            else
+                log_error "Detected distribution '$detected_distro' is not in supported list"
+                log_error "Supported distributions: ${SUPPORTED_DISTROS[*]}"
+                log_error "Detection method: $detection_method"
+                exit 1
+            fi
+            ;;
+    esac
+
+    # Parse and normalize version
+    DISTRO_VERSION=$(normalize_version "$detected_version")
+    DISTRO_CODENAME=$detected_codename
+
+    log_info "Distribution detected: $DISTRO $DISTRO_VERSION ($detection_method)"
+    if [[ -n "$DISTRO_CODENAME" ]]; then
+        log_debug "Codename: $DISTRO_CODENAME"
+    fi
+
+    # Validate supported distribution
+    if [[ ! " ${SUPPORTED_DISTROS[*]} " =~ " ${DISTRO} " ]]; then
+        log_error "Unsupported Linux distribution: $DISTRO"
+        log_info "Supported distributions: ${SUPPORTED_DISTROS[*]}"
+        log_info "Detection method: $detection_method"
+        exit 1
+    fi
+
+    # Check minimum versions with improved parsing
+    validate_minimum_version "$DISTRO" "$DISTRO_VERSION"
+
+    # Check for container environments
+    detect_container_environment
+
+    # Cache the results for performance
+    export DISTRO DETECTED_DISTRO=$DISTRO
+    export DISTRO_VERSION DETECTED_VERSION=$DISTRO_VERSION
+    export DISTRO_CODENAME DETECTED_CODENAME=$DISTRO_CODENAME
 }
 
 # System requirements check

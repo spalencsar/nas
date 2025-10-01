@@ -3,7 +3,7 @@
 # Default configuration values for NAS setup script
 
 # Script metadata
-SCRIPT_VERSION="2.0.0"
+SCRIPT_VERSION="2.1.0"
 SCRIPT_NAME="NAS Setup Script"
 SCRIPT_AUTHOR="Sebastian Palencsár"
 
@@ -28,7 +28,7 @@ NETDATA_PORT="19999"
 
 # Docker configuration
 DEFAULT_DOCKER_DATA_DIR="/var/lib/docker"
-DOCKER_COMPOSE_VERSION="2.24.0"
+DOCKER_COMPOSE_VERSION="2.30.0"
 
 # Application data directories
 VAULTWARDEN_DATA_DIR="/opt/vaultwarden"
@@ -36,7 +36,7 @@ JELLYFIN_DATA_DIR="/var/lib/jellyfin"
 PORTAINER_DATA_DIR="/opt/portainer"
 
 # System requirements
-MIN_DISK_SPACE_GB=20
+MIN_DISK_SPACE_GB=30
 MIN_RAM_MB=2048
 RECOMMENDED_RAM_MB=4096
 
@@ -65,35 +65,45 @@ NC='\033[0m' # No Color
 # Supported distributions
 SUPPORTED_DISTROS=("ubuntu" "debian" "fedora" "arch" "opensuse")
 
-# Package managers by distribution
-declare -A PKG_MANAGERS=(
-    ["ubuntu"]="apt-get"
-    ["debian"]="apt-get"
-    ["fedora"]="dnf"
-    ["arch"]="pacman"
-    ["opensuse"]="zypper"
-)
+# Get package manager for distribution
+get_package_manager() {
+    local distro="$1"
+    case "$distro" in
+        ubuntu|debian) echo "apt-get" ;;
+        fedora) echo "dnf" ;;
+        arch) echo "pacman" ;;
+        opensuse) echo "zypper" ;;
+        *) echo "unknown" ;;
+    esac
+}
 
-# Update commands by distribution
-declare -A UPDATE_COMMANDS=(
-    ["ubuntu"]="apt-get update && apt-get upgrade -y"
-    ["debian"]="apt-get update && apt-get upgrade -y"
-    ["fedora"]="dnf update -y"
-    ["arch"]="pacman -Syu --noconfirm"
-    ["opensuse"]="zypper refresh && zypper update -y"
-)
+# Get update command for distribution
+get_update_command() {
+    local distro="$1"
+    case "$distro" in
+        ubuntu|debian) echo "apt-get update && apt-get upgrade -y" ;;
+        fedora) echo "dnf update -y" ;;
+        arch) echo "pacman -Syu --noconfirm" ;;
+        opensuse) echo "zypper refresh && zypper update -y" ;;
+        *) echo "unknown" ;;
+    esac
+}
 
-# Service ports
-declare -A SERVICE_PORTS=(
-    ["ssh"]="${DEFAULT_SSH_PORT}"
-    ["samba"]="139,445"
-    ["nfs"]="2049"
-    ["netdata"]="${NETDATA_PORT}"
-    ["vaultwarden"]="8080"
-    ["jellyfin"]="8096"
-    ["portainer"]="9000"
-    ["docker"]="2375,2376"
-)
+# Get service port for service
+get_service_port() {
+    local service="$1"
+    case "$service" in
+        ssh) echo "${DEFAULT_SSH_PORT}" ;;
+        samba) echo "139,445" ;;
+        nfs) echo "2049" ;;
+        netdata) echo "${NETDATA_PORT}" ;;
+        vaultwarden) echo "8080" ;;
+        jellyfin) echo "8096" ;;
+        portainer) echo "9000" ;;
+        docker) echo "2375,2376" ;;
+        *) echo "unknown" ;;
+    esac
+}
 
 # Default firewall rules
 FIREWALL_RULES=(

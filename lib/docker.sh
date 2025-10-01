@@ -3,43 +3,52 @@
 install_docker() {
     log_info "Installing Docker..."
 
-    # Update package index and install prerequisites
-    handle_error sudo apt-get update
-    handle_error sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
-
-    # Add Docker's official GPG key
-    handle_error curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-
-    # Add Docker's official APT repository
-    handle_error sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-
-    # Update package index again
-    handle_error sudo apt-get update
-
-    # Install Docker CE
-    handle_error sudo apt-get install -y docker-ce
-
-    # Add user to the docker group
-    handle_error sudo usermod -aG docker "$NEW_USER"
-
     case $DISTRO in
         ubuntu|debian)
-            handle_error sudo apt-get install -y docker.io
+            # Update package index and install prerequisites
+            handle_error sudo apt-get update
+            handle_error sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+
+            # Add Docker's official GPG key
+            handle_error curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+            # Add Docker's official APT repository
+            handle_error echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+            # Update package index again
+            handle_error sudo apt-get update
+
+            # Install Docker CE and Compose plugin
+            handle_error sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
             ;;
         fedora)
-            handle_error sudo dnf install -y docker
+            # Add Docker repository
+            handle_error sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+
+            # Install Docker CE
+            handle_error sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
             ;;
         arch)
-            handle_error sudo pacman -S --noconfirm docker
+            # Install Docker from official Arch repos (usually up-to-date)
+            handle_error sudo pacman -S --noconfirm docker docker-compose
             ;;
         opensuse)
-            handle_error sudo zypper install -y docker
+            # Add Docker repository
+            handle_error sudo zypper addrepo https://download.docker.com/linux/opensuse/docker-ce.repo
+            handle_error sudo zypper refresh
+
+            # Install Docker CE
+            handle_error sudo zypper install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
             ;;
         *)
             log_error "Unsupported Linux distribution: $DISTRO"
             exit 1
             ;;
     esac
+
+    # Add user to the docker group
+    handle_error sudo usermod -aG docker "$NEW_USER"
+
     handle_error sudo systemctl enable docker
     handle_error sudo systemctl start docker
 

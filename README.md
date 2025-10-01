@@ -1,17 +1,17 @@
-# NAS Setup Script v2.0
+# NAS Setup Script v2.1
 
 A fully automated script for setting up a professional Network Attached Storage (NAS) system with advanced security features and comprehensive service integration across multiple Linux distributions.
 
-## 🚀 New Features in v2.0
+## 🚀 New Features in v2.1 - 2025 Compatibility Update
 
-- **Enhanced Input Validation** with comprehensive error handling
-- **Rollback Mechanism** for safe installation and recovery
-- **Unit Tests** for critical functions
-- **Performance Optimizations** and improved logging functionality
-- **Interactive Configuration** with intelligent defaults
-- **Automatic Dependency Checks** and installation
-- **Advanced Firewall Configuration** with intrusion detection
-- **Monitoring and Alerting** for system and security events
+- **Full IPv6 Support** throughout the entire system
+- **Modern Distribution Support** (Ubuntu 24.04+, Fedora 41+, openSUSE 15.6+)
+- **Enhanced Security** with Ed25519 SSH keys, auditd logging, and MAC
+- **Docker Compose Plugin** for modern container management
+- **Dual-Stack Networking** with IPv4/IPv6 connectivity tests
+- **Official Repository Sources** for all distributions
+- **Performance Optimizations** for modern hardware
+- **Enterprise-Grade Security** with comprehensive hardening
 
 ## 📋 Legal Notice
 
@@ -23,31 +23,34 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🖥️ Supported Distributions
 
-| Distribution | Minimum Version | Status | Tested |
-|--------------|----------------|--------|---------|
-| Ubuntu       | 20.04 LTS      | ✅ Full Support | ✅ |
-| Debian       | 11 (Bullseye)  | ✅ Full Support | ✅ |
-| Fedora       | 35+            | ✅ Full Support | ✅ |
-| Arch Linux   | Rolling        | ✅ Full Support | ✅ |
-| openSUSE     | Leap 15.4+     | ✅ Full Support | ✅ |
+| Distribution | Minimum Version | Status | Tested | IPv6 Support |
+|--------------|----------------|--------|---------|--------------|
+| Ubuntu       | 24.04 LTS      | ✅ Full Support | ✅ | ✅ Full |
+| Debian       | 12 (Bookworm)  | ✅ Full Support | ✅ | ✅ Full |
+| Fedora       | 41+            | ✅ Full Support | ✅ | ✅ Full |
+| Arch Linux   | Rolling        | ✅ Full Support | ✅ | ✅ Full |
+| openSUSE     | Leap 15.6+     | ✅ Full Support | ✅ | ✅ Full |
 
 ## ✨ Features and Services
 
 ### 🔧 Core System
-- **Automatic Distribution Detection** with version validation
-- **Network Configuration** (static IP, gateway, DNS)
-- **SSH Hardening** with custom port and security policies
+- **Robust Distribution Detection** with 5-method fallback system and container environment detection
+- **Advanced Version Validation** with regex parsing and bc calculator for precise comparisons
+- **Dual-Stack Network Configuration** (IPv4/IPv6 static IP, gateway, DNS)
+- **SSH Hardening** with Ed25519 keys and custom port
 - **User Management** with sudo privileges
 - **System Updates** and automatic security updates
 
 ### 🛡️ Security Features
-- **UFW/Firewalld Configuration** with intelligent rules
+- **UFW/Firewalld Configuration** with IPv6 support and intelligent rules
 - **Fail2ban Integration** for brute-force attack protection
-- **Rate Limiting** for critical services
+- **Rate Limiting** for critical services (IPv4/IPv6)
 - **IP Blocking Tools** for manual security measures
 - **Firewall Monitoring** with automatic alerts
 - **Secure Shared Memory** implementation
 - **Docker Content Trust** activation
+- **Audit Logging** with comprehensive system monitoring
+- **Mandatory Access Control** (AppArmor/SELinux integration)
 
 ### 📁 File Sharing
 - **Samba Configuration** with performance optimizations
@@ -56,30 +59,31 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Time Machine Support** for macOS backups
 
 ### 🐳 Container Platform
-- **Docker Installation** with optimized configuration
-- **Docker Compose** for multi-container applications
-- **Portainer** for graphical container management
-- **Secure Container Configuration** with best practices
+- **Docker Installation** from official repositories with optimized configuration
+- **Docker Compose Plugin** (v2.30.0+) for modern container orchestration
+- **Portainer** for graphical container management with HTTPS
+- **Secure Container Configuration** with best practices and IPv6 support
 
 ### 📊 Monitoring and Management
 - **Netdata** for real-time system monitoring
 - **Jellyfin** media server for multimedia content
 - **Vaultwarden** for secure password management
 - **System Performance Tracking** with automatic reports
+- **Comprehensive Unit Testing** framework with extensive test coverage
 
 ## 🔧 System Requirements
 
 ### Minimum Hardware Requirements
 - **CPU:** Dual-core processor (x86_64/AMD64)
-- **RAM:** 2GB minimum, 4GB recommended
-- **Storage:** 20GB for system, additional storage for NAS data
-- **Network:** Gigabit Ethernet recommended
+- **RAM:** 4GB minimum, 8GB recommended for Docker workloads
+- **Storage:** 30GB for system, additional storage for NAS data
+- **Network:** Gigabit Ethernet with IPv4/IPv6 support recommended
 
 ### Software Requirements
 - Fresh installation of a supported Linux distribution
 - systemd-based system
 - Root access or sudo privileges
-- Active internet connection for package downloads
+- Active IPv4/IPv6 internet connection for package downloads
 
 ### Optional Requirements
 - **ARM64 Support:** Partially available (experimental)
@@ -116,21 +120,22 @@ The script guides you through an interactive configuration:
 
 ### Network Settings
 - **SSH Port:** Default 39000 (customizable)
-- **Static IP:** Optionally configurable
-- **Gateway and DNS:** Automatic detection with override capability
+- **Dual-Stack IP:** IPv4/IPv6 static IP configuration
+- **Gateway and DNS:** IPv4/IPv6 automatic detection with override capability
 
 ### Service Selection
-- **Docker:** Container platform
-- **NFS:** Network File System
+- **Docker:** Container platform with Compose plugin
+- **NFS:** Network File System with IPv6 support
 - **Netdata:** System monitoring
-- **Vaultwarden:** Password manager
-- **Jellyfin:** Media server
-- **Portainer:** Docker management
+- **Vaultwarden:** Password manager with security hardening
+- **Jellyfin:** Media server with modern GPG keys
+- **Portainer:** Docker management with HTTPS
 
 ### Security Configuration
-- **Firewall Rules:** Automatic based on selected services
+- **Firewall Rules:** IPv4/IPv6 automatic based on selected services
 - **Fail2ban:** Protection against brute-force attacks
-- **Rate Limiting:** Protection against DoS attacks
+- **Rate Limiting:** IPv4/IPv6 protection against DoS attacks
+- **SSH Keys:** Ed25519 key generation for enhanced security
 
 ## 📁 Directory Structure
 
@@ -141,6 +146,7 @@ nas/
 │   └── defaults.sh            # Configuration variables and defaults
 ├── lib/
 │   ├── common.sh              # Common functions and validation
+│   ├── detection.sh           # Distribution and container detection
 │   ├── logging.sh             # Enhanced logging functionality
 │   ├── network.sh             # Network and SSH configuration
 │   ├── firewall.sh            # Firewall and security configuration
@@ -164,38 +170,41 @@ nas/
 
 ## 🔗 Default Ports and Services
 
-| Service | Port | Protocol | Description |
-|---------|------|----------|-------------|
-| SSH | 39000 | TCP | Secure Shell Access |
-| Samba | 139, 445 | TCP | Windows File Sharing |
-| Samba | 137, 138 | UDP | NetBIOS Name Service |
-| NFS | 2049 | TCP | Network File System |
-| Netdata | 19999 | TCP | System Monitoring |
-| Jellyfin | 8096 | TCP | Media Server Web Interface |
-| Jellyfin | 8920 | TCP | Media Server HTTPS |
-| Jellyfin | 1900 | UDP | DLNA Discovery |
-| Portainer | 9000 | TCP | Docker Management |
-| Vaultwarden | 8080 | TCP | Password Manager |
-| Docker API | 2375, 2376 | TCP | Docker Remote API |
+| Service | Port | Protocol | Description | IPv6 Support |
+|---------|------|----------|-------------|--------------|
+| SSH | 39000 | TCP | Secure Shell Access | ✅ |
+| Samba | 139, 445 | TCP | Windows File Sharing | ✅ |
+| Samba | 137, 138 | UDP | NetBIOS Name Service | ✅ |
+| NFS | 2049 | TCP | Network File System | ✅ |
+| Netdata | 19999 | TCP | System Monitoring | ✅ |
+| Jellyfin | 8096 | TCP | Media Server Web Interface | ✅ |
+| Jellyfin | 8920 | TCP | Media Server HTTPS | ✅ |
+| Jellyfin | 1900 | UDP | DLNA Discovery | ✅ |
+| Portainer | 9000 | TCP | Docker Management (HTTPS) | ✅ |
+| Vaultwarden | 8080 | TCP | Password Manager | ✅ |
+| Docker API | 2375, 2376 | TCP | Docker Remote API | ✅ |
 
 ## 🛡️ Security Features
 
 ### Advanced Firewall Configuration
-- **UFW (Ubuntu/Debian/Arch):** Automatic rule configuration
-- **Firewalld (Fedora/openSUSE):** Zone-based security
-- **Rate Limiting:** Protection against DoS attacks
-- **IP Blocking Tools:** Manual security measures
+- **UFW (Ubuntu/Debian/Arch):** IPv4/IPv6 rule configuration with local network rules
+- **Firewalld (Fedora/openSUSE):** Zone-based security with IPv6 rich rules
+- **Rate Limiting:** IPv4/IPv6 protection against DoS attacks
+- **IP Blocking Tools:** Manual security measures for both protocols
 
-### Intrusion Detection
+### Intrusion Detection & Audit
 - **Fail2ban:** Automatic IP blocking for suspicious activities
+- **Auditd:** Comprehensive system auditing and logging
 - **Log Monitoring:** Real-time security event monitoring
 - **Alert System:** Notifications for security incidents
 
-### SSH Hardening
+### SSH Hardening & Access Control
+- **Ed25519 Keys:** Modern cryptographic key generation
 - **Custom Ports:** Reduction of automated attacks
-- **Key-based Authentication:** SSH key support
+- **Key-based Authentication:** Enhanced security over passwords
 - **Connection Limits:** Limiting concurrent connections
-- **Root Login Prohibition:** Enhanced security
+- **Root Login Prohibition:** Enhanced security posture
+- **Mandatory Access Control:** AppArmor/SELinux integration
 
 ## 📊 Monitoring and Maintenance
 
@@ -266,10 +275,14 @@ The script offers automatic rollback on errors:
 #### Network Issues
 ```bash
 # Check network configuration
-ip addr show
-ip route show
-cat /etc/netplan/01-netcfg.yaml    # Ubuntu/Debian
-cat /etc/sysconfig/network-scripts/ifcfg-*  # Fedora/openSUSE
+ip addr show                    # IPv4/IPv6 addresses
+ip route show                   # Routing table
+cat /etc/netplan/01-netcfg.yaml # Ubuntu/Debian network config
+
+# IPv6 specific checks
+ip -6 addr show                 # IPv6 addresses only
+ip -6 route show               # IPv6 routing
+ping6 google.com               # IPv6 connectivity test
 
 # Restart network services
 sudo netplan apply                  # Ubuntu/Debian
@@ -291,13 +304,17 @@ sudo journalctl -u samba -f
 
 #### Firewall Issues
 ```bash
-# UFW status and rules
+# UFW status and rules (IPv4/IPv6)
 sudo ufw status numbered
 sudo ufw show raw
 
-# Firewalld status and rules
+# Firewalld status and rules (IPv4/IPv6)
 sudo firewall-cmd --list-all-zones
 sudo firewall-cmd --get-active-zones
+
+# IPv6 specific firewall checks
+sudo ip6tables -L -n          # Direct IPv6 rules
+sudo firewall-cmd --list-all --zone=public  # Firewalld IPv6
 ```
 
 #### Permission Issues
@@ -334,6 +351,9 @@ We welcome contributions to improve this project! Please read [CONTRIBUTING.md](
 1. [Browse Wiki](https://github.com/spalencsar/nas/wiki)
 2. [Search existing issues](https://github.com/spalencsar/nas/issues)
 3. Create new issue if needed
+
+### Security Issues
+Please see our [Security Policy](SECURITY.md) for reporting security vulnerabilities.
 
 ### Professional Support
 For commercial support and custom solutions, contact the author.
