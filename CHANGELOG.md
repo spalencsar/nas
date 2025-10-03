@@ -40,10 +40,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - I/O scheduler path validation with automatic disk detection
   - Optional unattended-upgrades (disabled by default for user control)
 
-- **Enhanced Security Documentation**
-  - New SECURITY.md with comprehensive security policy
-  - Updated security features documentation
-  - Container security considerations and warnings
+- **User Management Overhaul**
+  - Script now uses existing sudo user instead of creating new "nasadmin" user
+  - Automatic detection of SUDO_USER environment variable
+  - Interactive user creation only when specified user doesn't exist
+  - Simplified user management workflow
 
 - **Code Quality Improvements**
   - New CODE_OF_CONDUCT.md for community guidelines

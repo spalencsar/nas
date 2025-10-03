@@ -311,7 +311,17 @@ create_interactive_config() {
     save_config "SSH_PORT" "$ssh_port"
     
     # User configuration
-    local username=$(ask_input "Admin username" "$NEW_USER" "validate_username")
+    local current_user
+    if [[ -n "${SUDO_USER:-}" ]]; then
+        current_user="$SUDO_USER"
+        log_info "Using current sudo user: $current_user"
+    else
+        current_user="$USER"
+        log_info "Using current user: $current_user"
+    fi
+    
+    # Pre-fill with current user, but allow override
+    local username=$(ask_input "Admin username" "$current_user" "validate_username")
     save_config "ADMIN_USER" "$username"
     # Ensure the configured admin user exists (offer interactive creation)
     ensure_user_exists_interactive "$username" || log_warning "Admin user '$username' not created; some features may require it."

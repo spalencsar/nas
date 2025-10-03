@@ -154,10 +154,8 @@ The script guides you through an interactive configuration:
 - **Webmin:** Web-based system administration interface (optional)
 - **Unattended Upgrades:** Automatic security updates (optional, disabled by default)
 
-### Security Configuration
-- **Firewall Rules:** IPv4/IPv6 automatic based on selected services
-- **Fail2ban:** Protection against brute-force attacks
-- **Rate Limiting:** IPv4/IPv6 protection against DoS attacks
+### User Configuration
+- **Admin User:** Uses the current sudo user by default (no new user creation required)
 - **SSH Keys:** Ed25519 key generation for enhanced security
 
 ## 📁 Directory Structure
