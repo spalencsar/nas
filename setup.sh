@@ -502,6 +502,23 @@ show_installation_summary() {
         echo "  ✓ Webmin web interface: https://$(hostname -I | awk '{print $1}'):10000"
     fi
     
+    # Docker notes
+    if [[ "${INSTALL_DOCKER:-false}" != "true" ]]; then
+        echo
+        log_warning "Docker wurde nicht installiert oder wurde während der Installation deaktiviert."
+        echo "If you need Docker later, repair the daemon and restart Docker with the helper script in the repository:"
+        echo "  cd $(pwd) && sudo bash scripts/repair_docker.sh"
+        echo "Or create a minimal valid daemon.json and restart Docker manually:" 
+        echo "  sudo mv /etc/docker/daemon.json /tmp/daemon.json.broken.$(date +%s) || true"
+        echo "  sudo tee /etc/docker/daemon.json > /dev/null <<'EOF'" 
+        echo "{"
+        echo "  \"storage-driver\": \"overlay2\""
+        echo "}"
+        echo "EOF"
+        echo "  sudo systemctl daemon-reload && sudo systemctl restart docker"
+        echo
+    fi
+
     echo
     log_info "Next steps:"
     echo "  1. Reboot the system to ensure all changes take effect"

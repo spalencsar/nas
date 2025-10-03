@@ -28,6 +28,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Performance tuning (live-restore, userland-proxy=false)
   - Resource limits and metrics endpoint configuration
 
+- **Docker Auto-Repair Functionality**
+  - Automatic daemon.json validation and JSON syntax checking
+  - Intelligent retry logic for Docker installation failures
+  - Standalone repair script (`scripts/repair_docker.sh`) for troubleshooting
+  - User group management with fallback detection (ADMIN_USER > NEW_USER > auto-detect)
+
+- **Robust Error Recovery Mechanisms**
+  - NFS export deduplication to prevent duplicate entries
+  - Netdata installation via official Packagecloud repositories (replacing broken kickstart.sh)
+  - I/O scheduler path validation with automatic disk detection
+  - Optional unattended-upgrades (disabled by default for user control)
+
 - **Enhanced Security Documentation**
   - New SECURITY.md with comprehensive security policy
   - Updated security features documentation
@@ -42,16 +54,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Version Update**: Bumped to v2.1.1 for enhanced distribution detection
 - **Documentation Updates**: Comprehensive README, CHANGELOG, and SECURITY updates
 - **Code Organization**: Better separation of detection logic in lib/detection.sh
+- **Unattended Upgrades**: Now optional (ENABLE_AUTO_UPDATES=false by default)
 
 #### Fixed
-- **Distribution Compatibility**: Improved detection reliability across all supported distributions
-- **Container Environment Handling**: Better warnings and compatibility checks
-- **Version Parsing**: More robust version comparison and normalization
+- **Docker Installation Issues**
+  - Fixed unbound SUDO variable errors
+  - Resolved invalid daemon.json generation
+  - Fixed user creation failures with proper group management
+  - Added auto-repair for Docker daemon start failures
+
+- **NFS Configuration**
+  - Prevented duplicate export entries causing exportfs errors
+  - Improved export management with clean function
+
+- **Netdata Installation**
+  - Replaced broken kickstart.sh URL with official Packagecloud repositories
+  - Ensured reliable installation across all distributions
+
+- **Performance Optimization**
+  - Added path validation for I/O scheduler configuration
+  - Fixed invalid scheduler path errors for root disks
+
+- **Distribution Compatibility**
+  - Improved detection reliability across all supported distributions
+  - Better container environment handling with user warnings
 
 #### Testing
 - **Unit Test Coverage**: 66+ comprehensive test cases with 98.5% success rate
 - **Distribution Testing**: Enhanced testing across Ubuntu, Debian, Fedora, Arch, openSUSE
 - **Container Testing**: Validation in Docker, Podman, LXC, and WSL environments
+- **Error Recovery Testing**: Verified auto-repair functionality for Docker failures
 
 ---
 

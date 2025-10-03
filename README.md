@@ -1,9 +1,21 @@
-# NAS Setup Script v2.1
+# NAS Setup Script v2.1.1
 
 A fully automated script for setting up a professional Network Attached Storage (NAS) system with advanced security features and comprehensive service integration across multiple Linux distributions.
 
-## 🚀 New Features in v2.1 - 2025 Compatibility Update
+## 🚀 New Features in v2.1.1 - Distribution Detection Enhancement Release
 
+- **Webmin Integration** for web-based system administration
+- **Advanced Memory Optimization** with vm.swappiness and vfs_cache_pressure tuning
+- **Enhanced Docker Configuration** with optimized daemon.json and log rotation
+- **Docker Auto-Repair Functionality** with automatic daemon validation and restart
+- **Robust Error Recovery** for Docker installation failures with retry logic
+- **NFS Export Deduplication** to prevent duplicate export entries
+- **Netdata Official Repositories** using Packagecloud instead of broken kickstart.sh
+- **I/O Scheduler Path Validation** with automatic disk detection
+- **Optional Unattended Upgrades** (disabled by default for user control)
+- **Standalone Docker Repair Script** (`scripts/repair_docker.sh`) for troubleshooting
+
+### Previous v2.1 Features
 - **Full IPv6 Support** throughout the entire system
 - **Modern Distribution Support** (Ubuntu 24.04+, Fedora 41+, openSUSE 15.6+)
 - **Enhanced Security** with Ed25519 SSH keys, auditd logging, and MAC
@@ -125,13 +137,14 @@ The script guides you through an interactive configuration:
 - **Gateway and DNS:** IPv4/IPv6 automatic detection with override capability
 
 ### Service Selection
-- **Docker:** Container platform with Compose plugin (required for Vaultwarden, Jellyfin, Portainer)
-- **NFS:** Network File System with IPv6 support
-- **Netdata:** System monitoring
-- **Vaultwarden:** Password manager with security hardening (requires Docker)
-- **Jellyfin:** Media server with modern GPG keys (requires Docker)
-- **Portainer:** Docker management with HTTPS (requires Docker)
-- **Webmin:** Web-based system administration interface
+- **Docker:** Container platform with Compose plugin and auto-repair functionality (required for Vaultwarden, Jellyfin, Portainer)
+- **NFS:** Network File System with IPv6 support and export deduplication
+- **Netdata:** System monitoring via official Packagecloud repositories
+- **Vaultwarden:** Password manager with security hardening (requires Docker, optional)
+- **Jellyfin:** Media server with modern GPG keys (requires Docker, optional)
+- **Portainer:** Docker management with HTTPS (requires Docker, optional)
+- **Webmin:** Web-based system administration interface (optional)
+- **Unattended Upgrades:** Automatic security updates (optional, disabled by default)
 
 ### Security Configuration
 - **Firewall Rules:** IPv4/IPv6 automatic based on selected services
@@ -144,6 +157,8 @@ The script guides you through an interactive configuration:
 ```
 nas/
 ├── setup.sh                    # Main installation script
+├── scripts/
+│   └── repair_docker.sh        # Docker repair and troubleshooting script
 ├── config/
 │   └── defaults.sh            # Configuration variables and defaults
 ├── lib/
@@ -291,6 +306,25 @@ ping6 google.com               # IPv6 connectivity test
 # Restart network services
 sudo netplan apply                  # Ubuntu/Debian
 sudo systemctl restart NetworkManager  # Fedora/openSUSE
+```
+
+#### Docker Issues
+```bash
+# Check Docker status
+sudo systemctl status docker
+sudo docker version
+
+# View Docker logs
+sudo journalctl -u docker -f
+
+# Repair Docker configuration (new in v2.1.1)
+sudo ./scripts/repair_docker.sh
+
+# Check daemon.json syntax
+sudo docker daemon --validate-config
+
+# Restart Docker with validation
+sudo systemctl restart docker
 ```
 
 #### Service Issues
