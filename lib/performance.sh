@@ -45,12 +45,16 @@ EOF
     local disk_type=$(lsblk -d -o name,rota | awk 'NR>1 {if($2==0) print "ssd"; else print "hdd"; exit}')
     local root_disk=$(lsblk -no pkname $(findmnt -n -o source /) | head -n1)
     
-    if [[ "$disk_type" == "ssd" ]]; then
-        echo "mq-deadline" | sudo tee "/sys/block/$root_disk/queue/scheduler" > /dev/null
-        log_info "Optimized I/O scheduler for SSD"
+    if [[ -n "$root_disk" ]] && [[ -w "/sys/block/$root_disk/queue/scheduler" ]]; then
+        if [[ "$disk_type" == "ssd" ]]; then
+            echo "mq-deadline" | sudo tee "/sys/block/$root_disk/queue/scheduler" > /dev/null
+            log_info "Optimized I/O scheduler for SSD"
+        else
+            echo "bfq" | sudo tee "/sys/block/$root_disk/queue/scheduler" > /dev/null
+            log_info "Optimized I/O scheduler for HDD"
+        fi
     else
-        echo "bfq" | sudo tee "/sys/block/$root_disk/queue/scheduler" > /dev/null
-        log_info "Optimized I/O scheduler for HDD"
+        log_warning "Could not determine or access root disk scheduler. Skipping I/O optimization."
     fi
     
     # Create performance monitoring script
