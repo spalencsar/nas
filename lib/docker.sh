@@ -154,9 +154,21 @@ install_docker() {
     done
 
     if [[ "$_started" != true ]]; then
-        log_error "docker.service failed to start after $_start_retries attempts. Disabling Docker for remainder of setup to continue other tasks."
-        # Prevent subsequent steps from attempting Docker-dependent installs
-        INSTALL_DOCKER=false
+        log_error "docker.service failed to start after $_start_retries attempts."
+        # If running interactively, ask whether to continue without Docker or abort.
+        if [[ -t 0 ]]; then
+            if ask_yes_no "Docker failed to start. Continue setup without Docker (skip Docker-dependent services)?" "y"; then
+                log_warning "Continuing setup without Docker. Docker-dependent services will be skipped."
+                INSTALL_DOCKER=false
+            else
+                log_error "Aborting setup because Docker could not be started and user chose to abort."
+                exit 1
+            fi
+        else
+            # Non-interactive environment: default to continuing without Docker to avoid blocking
+            log_warning "Non-interactive shell detected - continuing setup without Docker."
+            INSTALL_DOCKER=false
+        fi
     fi
 
     # Configure Docker data directory and optimization
