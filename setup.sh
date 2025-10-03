@@ -499,6 +499,9 @@ main() {
     check_system_requirements
     get_system_info
     
+    # Unset any existing config variables to ensure clean state
+    unset INSTALL_DOCKER INSTALL_NFS INSTALL_NETDATA INSTALL_VAULTWARDEN INSTALL_JELLYFIN INSTALL_PORTAINER INSTALL_WEBMIN CONFIGURE_STATIC_IP SSH_PORT ADMIN_USER
+    
     # Configuration
     load_or_create_config
     
