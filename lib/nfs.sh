@@ -28,11 +28,17 @@ install_nfs() {
     sudo chown nobody:nogroup "$export_dir"
     sudo chmod 755 "$export_dir"
     
-    # Configure NFS exports
+    # Configure NFS exports (avoid duplicates)
     local exports_file="/etc/exports"
     backup_config "$exports_file"
     
-    echo "$export_dir *(rw,sync,no_subtree_check,no_root_squash)" | sudo tee -a "$exports_file" > /dev/null
+    local export_line="$export_dir *(rw,sync,no_subtree_check,no_root_squash)"
+    if ! grep -q "^$export_dir " "$exports_file" 2>/dev/null; then
+        echo "$export_line" | sudo tee -a "$exports_file" > /dev/null
+        log_debug "Added NFS export: $export_line"
+    else
+        log_debug "NFS export for $export_dir already exists, skipping addition"
+    fi
     
     # Export NFS shares
     handle_error sudo exportfs -a
