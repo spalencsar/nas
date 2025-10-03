@@ -125,12 +125,12 @@ The script guides you through an interactive configuration:
 - **Gateway and DNS:** IPv4/IPv6 automatic detection with override capability
 
 ### Service Selection
-- **Docker:** Container platform with Compose plugin
+- **Docker:** Container platform with Compose plugin (required for Vaultwarden, Jellyfin, Portainer)
 - **NFS:** Network File System with IPv6 support
 - **Netdata:** System monitoring
-- **Vaultwarden:** Password manager with security hardening
-- **Jellyfin:** Media server with modern GPG keys
-- **Portainer:** Docker management with HTTPS
+- **Vaultwarden:** Password manager with security hardening (requires Docker)
+- **Jellyfin:** Media server with modern GPG keys (requires Docker)
+- **Portainer:** Docker management with HTTPS (requires Docker)
 - **Webmin:** Web-based system administration interface
 
 ### Security Configuration
