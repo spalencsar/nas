@@ -58,16 +58,35 @@ exec > >(tee -a "${LOG_FILE}") 2>&1
 
 # Enhanced error handling with rollback
 handle_error() {
+    # Dual-mode: if called with a non-numeric first argument, treat as wrapper
+    # e.g. handle_error sudo cp ... -> execute the command and handle failures
+    if [[ $# -ge 1 && ! "$1" =~ ^[0-9]+$ ]]; then
+        "$@"
+        local _rc=$?
+        if [[ $_rc -ne 0 ]]; then
+            local _line_number=${BASH_LINENO[0]:-0}
+            local _command="$*"
+            log_error "Script failed at line ${_line_number}: ${_command} (exit code: ${_rc})"
+            if ask_yes_no "An error occurred. Would you like to rollback changes?" "y"; then
+                execute_rollback
+            fi
+            cleanup
+            exit $_rc
+        fi
+        return 0
+    fi
+
+    # Trap handler mode: handle_error <line> "<command>"
     local exit_code=$?
     local line_number=$1
     local command="$2"
-    
+
     log_error "Script failed at line ${line_number}: ${command} (exit code: ${exit_code})"
-    
+
     if ask_yes_no "An error occurred. Would you like to rollback changes?" "y"; then
         execute_rollback
     fi
-    
+
     cleanup
     exit $exit_code
 }
