@@ -156,34 +156,36 @@ configure_docker_daemon() {
     
     sudo mkdir -p /etc/docker
     
-    # Create optimized daemon.json
-    cat << EOF | sudo tee /etc/docker/daemon.json
+        # Create optimized daemon.json with optional data-root
+        local _data_root_line=""
+        if [[ "$DOCKER_DATA_DIR" != "${DEFAULT_DOCKER_DATA_DIR}" ]]; then
+                _data_root_line="  \"data-root\": \"${DOCKER_DATA_DIR}\","
+                log_debug "Including data-root in daemon.json: ${DOCKER_DATA_DIR}"
+        fi
+
+        sudo tee /etc/docker/daemon.json > /dev/null <<EOF
 {
-  "storage-driver": "overlay2",
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "10m",
-    "max-file": "3"
-  },
-  "exec-opts": ["native.cgroupdriver=systemd"],
-  "live-restore": true,
-  "userland-proxy": false,
-  "experimental": false,
-  "metrics-addr": "0.0.0.0:9323",
-  "default-ulimits": {
-    "nofile": {
-      "Hard": 64000,
-      "Name": "nofile",
-      "Soft": 64000
+${_data_root_line}
+    "storage-driver": "overlay2",
+    "log-driver": "json-file",
+    "log-opts": {
+        "max-size": "10m",
+        "max-file": "3"
+    },
+    "exec-opts": ["native.cgroupdriver=systemd"],
+    "live-restore": true,
+    "userland-proxy": false,
+    "experimental": false,
+    "metrics-addr": "0.0.0.0:9323",
+    "default-ulimits": {
+        "nofile": {
+            "Name": "nofile",
+            "Soft": 64000,
+            "Hard": 64000
+        }
     }
-  }
+}
 EOF
-    
-    # Add data-root if custom directory is specified
-    if [[ "$DOCKER_DATA_DIR" != "$DEFAULT_DOCKER_DATA_DIR" ]]; then
-        # Modify the daemon.json to include data-root
-        sudo sed -i "s|{|{\n  \"data-root\": \"$DOCKER_DATA_DIR\",|" /etc/docker/daemon.json
-    fi
     
     # Restart Docker to apply configuration
     handle_error sudo systemctl restart docker
