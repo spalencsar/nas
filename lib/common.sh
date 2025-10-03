@@ -260,6 +260,42 @@ start_and_enable_service() {
     fi
 }
 
+# Robust SSH restart helper: try sshd, then ssh, then service command
+restart_ssh_service() {
+    log_info "Attempting to restart SSH service using available service name..."
+
+    if systemctl list-unit-files --type=service | grep -q "^sshd.service"; then
+        if sudo systemctl restart sshd; then
+            log_success "sshd.service restarted successfully"
+            return 0
+        else
+            log_warning "Failed to restart sshd.service"
+        fi
+    fi
+
+    if systemctl list-unit-files --type=service | grep -q "^ssh.service"; then
+        if sudo systemctl restart ssh; then
+            log_success "ssh.service restarted successfully"
+            return 0
+        else
+            log_warning "Failed to restart ssh.service"
+        fi
+    fi
+
+    # Fallback to service command
+    if command -v service >/dev/null 2>&1; then
+        if sudo service ssh restart; then
+            log_success "SSH restarted via service ssh restart"
+            return 0
+        else
+            log_warning "Failed to restart SSH via 'service ssh restart'"
+        fi
+    fi
+
+    log_error "Unable to restart SSH service with known methods"
+    return 1
+}
+
 # Configuration management
 save_config() {
     local key="$1"

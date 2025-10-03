@@ -244,10 +244,9 @@ EOF
         return 1
     fi
     
-    # Restart SSH service
-    if sudo systemctl restart sshd; then
-        log_success "SSH service restarted successfully"
-        add_rollback_action "sudo cp ${ssh_config}.bak ${ssh_config} && sudo systemctl restart sshd"
+    # Restart SSH service using helper (handles sshd vs ssh service names)
+    if restart_ssh_service; then
+        add_rollback_action "sudo cp ${ssh_config}.bak ${ssh_config} && restart_ssh_service"
         return 0
     else
         log_error "Failed to restart SSH service"

@@ -119,12 +119,15 @@ harden_ssh() {
     
     # Test SSH config
     if sudo sshd -t; then
-        sudo systemctl restart sshd
-        log_success "SSH hardened successfully."
+        if restart_ssh_service; then
+            log_success "SSH hardened successfully."
+        else
+            log_warning "SSH configuration valid but failed to restart service via known methods."
+        fi
     else
         log_error "SSH configuration invalid. Restoring backup."
         sudo cp "${ssh_config}.bak" "$ssh_config"
-        sudo systemctl restart sshd
+        restart_ssh_service || true
     fi
 }
 
