@@ -316,7 +316,7 @@ EOF
     # Add Samba user
     local samba_password=$(ask_password "Set Samba password for user ${ADMIN_USER:-$USER}")
     echo -e "$samba_password\n$samba_password" | sudo smbpasswd -a "${ADMIN_USER:-$USER}"
-    sudo smbpasswd -e "${ADMIN_USER:-$NEW_USER}"
+    sudo smbpasswd -e "${ADMIN_USER:-$USER}"
     
     # Start and enable Samba services
     sudo systemctl enable smbd nmbd

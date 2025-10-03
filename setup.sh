@@ -300,6 +300,9 @@ load_or_create_config() {
         create_interactive_config
         load_config  # Load the new configuration
     fi
+    
+    # Export configuration variables for use in subshells
+    export ADMIN_USER SSH_PORT CONFIGURE_STATIC_IP INSTALL_DOCKER INSTALL_NFS INSTALL_NETDATA INSTALL_VAULTWARDEN INSTALL_JELLYFIN INSTALL_PORTAINER INSTALL_WEBMIN ENABLE_AUTO_UPDATES
 }
 
 create_interactive_config() {
