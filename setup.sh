@@ -354,78 +354,78 @@ run_installation() {
     log_info "Starting NAS installation process..."
     
     # Core system setup
-    ((current_step++)); log_debug "run_installation: about to install dependencies (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Installing dependencies"
+    current_step=$((current_step + 1)); log_debug "run_installation: about to install dependencies (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Installing dependencies"
     install_dependencies
-    
-    ((current_step++)); log_debug "run_installation: about to configure network (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Configuring network"
+
+    current_step=$((current_step + 1)); log_debug "run_installation: about to configure network (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Configuring network"
     if [[ "${CONFIGURE_STATIC_IP:-false}" == "true" ]]; then
         configure_network
     fi
-    
-    ((current_step++)); log_debug "run_installation: about to configure SSH (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Configuring SSH"
+
+    current_step=$((current_step + 1)); log_debug "run_installation: about to configure SSH (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Configuring SSH"
     configure_ssh
-    
-    ((current_step++)); log_debug "run_installation: about to setup Samba (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Setting up Samba"
+
+    current_step=$((current_step + 1)); log_debug "run_installation: about to setup Samba (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Setting up Samba"
     setup_samba
-    
-    ((current_step++)); log_debug "run_installation: about to configure firewall (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Configuring firewall"
+
+    current_step=$((current_step + 1)); log_debug "run_installation: about to configure firewall (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Configuring firewall"
     configure_firewall
     
     # Security setup
-    ((current_step++)); log_debug "run_installation: about to implement security measures (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Implementing security measures"
+    current_step=$((current_step + 1)); log_debug "run_installation: about to implement security measures (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Implementing security measures"
     secure_shared_memory
     install_fail2ban
     configure_automatic_updates
     
     # Optional services
     if [[ "${INSTALL_DOCKER:-false}" == "true" ]]; then
-        ((current_step++)); log_debug "run_installation: about to install Docker (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Installing Docker"
+        current_step=$((current_step + 1)); log_debug "run_installation: about to install Docker (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Installing Docker"
         install_docker
     else
-        ((current_step++))
+        current_step=$((current_step + 1))
     fi
     
     if [[ "${INSTALL_NFS:-false}" == "true" ]]; then
-        ((current_step++)); log_debug "run_installation: about to install NFS (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Installing NFS"
+        current_step=$((current_step + 1)); log_debug "run_installation: about to install NFS (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Installing NFS"
         install_nfs
     else
-        ((current_step++))
+        current_step=$((current_step + 1))
     fi
     
     if [[ "${INSTALL_NETDATA:-false}" == "true" ]]; then
-        ((current_step++)); log_debug "run_installation: about to install Netdata (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Installing Netdata"
+        current_step=$((current_step + 1)); log_debug "run_installation: about to install Netdata (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Installing Netdata"
         install_netdata
     else
-        ((current_step++))
+        current_step=$((current_step + 1))
     fi
     
     if [[ "${INSTALL_VAULTWARDEN:-false}" == "true" ]]; then
-        ((current_step++)); log_debug "run_installation: about to install Vaultwarden (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Installing Vaultwarden"
+        current_step=$((current_step + 1)); log_debug "run_installation: about to install Vaultwarden (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Installing Vaultwarden"
         install_vaultwarden
     else
-        ((current_step++))
+        current_step=$((current_step + 1))
     fi
     
     if [[ "${INSTALL_JELLYFIN:-false}" == "true" ]]; then
-        ((current_step++)); log_debug "run_installation: about to install Jellyfin (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Installing Jellyfin"
+        current_step=$((current_step + 1)); log_debug "run_installation: about to install Jellyfin (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Installing Jellyfin"
         install_jellyfin
     else
-        ((current_step++))
+        current_step=$((current_step + 1))
     fi
     
     if [[ "${INSTALL_PORTAINER:-false}" == "true" ]]; then
-        ((current_step++)); log_debug "run_installation: about to install Portainer (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Installing Portainer"
+        current_step=$((current_step + 1)); log_debug "run_installation: about to install Portainer (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Installing Portainer"
         install_portainer
     else
-        ((current_step++))
+        current_step=$((current_step + 1))
     fi
     
     if [[ "${INSTALL_WEBMIN:-false}" == "true" ]]; then
-        ((current_step++)); log_debug "run_installation: about to install Webmin (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Installing Webmin"
+        current_step=$((current_step + 1)); log_debug "run_installation: about to install Webmin (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Installing Webmin"
         install_webmin
         configure_webmin
     else
-        ((current_step++))
+        current_step=$((current_step + 1))
     fi
 }
 
