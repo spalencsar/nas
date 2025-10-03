@@ -127,6 +127,14 @@ chmod +x tests/unit_tests.sh
 ./tests/unit_tests.sh
 ```
 
+### 5. Check Installation Summary
+```bash
+# View the services summary file created during installation
+cat ~/nas_services.txt
+
+# This file contains all service URLs, ports, and access information
+```
+
 ## ⚙️ Configuration
 
 The script guides you through an interactive configuration:

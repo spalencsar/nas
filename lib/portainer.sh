@@ -33,7 +33,19 @@ install_portainer() {
         -v portainer_data:/data \
         portainer/portainer-ce:latest
 
+    # Warten bis Portainer vollständig gestartet ist
+    log_info "Warten auf Portainer-Initialisierung..."
+    sleep 10
+
+    # Portainer neu starten, um das initiale Security-Timeout zu umgehen
+    log_info "Portainer neu starten, um Security-Timeout zu beheben..."
+    sudo docker restart portainer
+
+    # Kurz warten, bis der Neustart abgeschlossen ist
+    sleep 5
+
     log_success "Portainer wurde erfolgreich installiert und läuft auf Port 9000 (HTTP) und 9443 (HTTPS)."
+    log_info "Portainer ist nun verfügbar unter: https://$(hostname -I | awk '{print $1}'):9443"
 }
 
 # Logging-Funktionen bereitstellen, falls nicht vorhanden

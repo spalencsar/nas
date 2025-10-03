@@ -466,6 +466,16 @@ run_installation() {
 
 # Installation summary
 show_installation_summary() {
+    local ip_address
+    ip_address=$(hostname -I | awk '{print $1}')
+    local user_home
+    if [[ -n "${SUDO_USER:-}" ]]; then
+        user_home=$(eval echo "~${SUDO_USER}")
+    else
+        user_home="$HOME"
+    fi
+    local summary_file="${user_home}/nas_services.txt"
+
     echo
     log_success "=== NAS Setup Completed Successfully ==="
     echo
@@ -481,7 +491,7 @@ show_installation_summary() {
     else
         echo "  - Automatic updates not enabled (optional)"
     fi
-    
+
     # Service summary
     if [[ "${INSTALL_DOCKER:-false}" == "true" ]]; then
         echo "  ✓ Docker installed and configured"
@@ -490,34 +500,162 @@ show_installation_summary() {
         echo "  ✓ NFS server installed"
     fi
     if [[ "${INSTALL_NETDATA:-false}" == "true" ]]; then
-        echo "  ✓ Netdata monitoring: http://$(hostname -I | awk '{print $1}'):${NETDATA_PORT}"
+        echo "  ✓ Netdata monitoring: http://${ip_address}:${NETDATA_PORT}"
     fi
     if [[ "${INSTALL_JELLYFIN:-false}" == "true" ]]; then
-        echo "  ✓ Jellyfin media server: http://$(hostname -I | awk '{print $1}'):8096"
+        echo "  ✓ Jellyfin media server: http://${ip_address}:8096"
     fi
     if [[ "${INSTALL_PORTAINER:-false}" == "true" ]]; then
-        echo "  ✓ Portainer Docker management: http://$(hostname -I | awk '{print $1}'):9000"
+        echo "  ✓ Portainer Docker management: http://${ip_address}:9000"
     fi
     if [[ "${INSTALL_WEBMIN:-false}" == "true" ]]; then
-        echo "  ✓ Webmin web interface: https://$(hostname -I | awk '{print $1}'):10000"
+        echo "  ✓ Webmin web interface: https://${ip_address}:10000"
     fi
-    
-    # Docker notes
-    if [[ "${INSTALL_DOCKER:-false}" != "true" ]]; then
-        echo
-        log_warning "Docker wurde nicht installiert oder wurde während der Installation deaktiviert."
-        echo "If you need Docker later, repair the daemon and restart Docker with the helper script in the repository:"
-        echo "  cd $(pwd) && sudo bash scripts/repair_docker.sh"
-        echo "Or create a minimal valid daemon.json and restart Docker manually:" 
-        echo "  sudo mv /etc/docker/daemon.json /tmp/daemon.json.broken.$(date +%s) || true"
-        echo "  sudo tee /etc/docker/daemon.json > /dev/null <<'EOF'" 
-        echo "{"
-        echo "  \"storage-driver\": \"overlay2\""
-        echo "}"
-        echo "EOF"
-        echo "  sudo systemctl daemon-reload && sudo systemctl restart docker"
-        echo
+
+    # Create services summary file
+    log_info "Creating services summary file: ${summary_file}"
+    cat > "${summary_file}" << EOF
+============================================================
+          NAS Services - Installation Summary
+============================================================
+
+Installation Date: $(date)
+System IP Address: ${ip_address}
+Admin User: ${ADMIN_USER:-$NEW_USER}
+SSH Port: ${SSH_PORT:-$DEFAULT_SSH_PORT}
+
+------------------------------------------------------------
+Installed Services and Access Information:
+------------------------------------------------------------
+
+SSH Access:
+  - Host: ${ip_address}
+  - Port: ${SSH_PORT:-$DEFAULT_SSH_PORT}
+  - User: ${ADMIN_USER:-$NEW_USER}
+  - Command: ssh -p ${SSH_PORT:-$DEFAULT_SSH_PORT} ${ADMIN_USER:-$NEW_USER}@${ip_address}
+
+EOF
+
+    # Add service information to file
+    if [[ "${INSTALL_NETDATA:-false}" == "true" ]]; then
+        cat >> "${summary_file}" << EOF
+Netdata Monitoring:
+  - URL: http://${ip_address}:${NETDATA_PORT}
+  - Description: Real-time system monitoring and metrics
+
+EOF
     fi
+
+    if [[ "${INSTALL_JELLYFIN:-false}" == "true" ]]; then
+        cat >> "${summary_file}" << EOF
+Jellyfin Media Server:
+  - Web Interface: http://${ip_address}:8096
+  - HTTPS Interface: http://${ip_address}:8920
+  - DLNA Port: ${ip_address}:1900 (UDP)
+  - Description: Media streaming and management server
+
+EOF
+    fi
+
+    if [[ "${INSTALL_PORTAINER:-false}" == "true" ]]; then
+        cat >> "${summary_file}" << EOF
+Portainer Docker Management:
+  - HTTP Interface: http://${ip_address}:9000
+  - HTTPS Interface: https://${ip_address}:9443
+  - Description: Web-based Docker container management
+  - Note: Use HTTPS (9443) for secure access
+
+EOF
+    fi
+
+    if [[ "${INSTALL_VAULTWARDEN:-false}" == "true" ]]; then
+        cat >> "${summary_file}" << EOF
+Vaultwarden Password Manager:
+  - URL: http://${ip_address}:8080
+  - Description: Bitwarden-compatible password manager
+
+EOF
+    fi
+
+    if [[ "${INSTALL_WEBMIN:-false}" == "true" ]]; then
+        cat >> "${summary_file}" << EOF
+Webmin System Administration:
+  - URL: https://${ip_address}:10000
+  - Description: Web-based system administration interface
+
+EOF
+    fi
+
+    if [[ "${INSTALL_NFS:-false}" == "true" ]]; then
+        cat >> "${summary_file}" << EOF
+NFS Server:
+  - Port: ${ip_address}:2049
+  - Description: Network File System for Unix/Linux clients
+  - Mount example: mount -t nfs ${ip_address}:/srv/nfs /mnt/nfs
+
+EOF
+    fi
+
+    # Samba information
+    cat >> "${summary_file}" << EOF
+Samba File Sharing:
+  - Ports: ${ip_address}:139 (TCP), ${ip_address}:445 (TCP), ${ip_address}:137-138 (UDP)
+  - Description: Windows file sharing (SMB/CIFS)
+  - Access: \\\\${ip_address} or smb://${ip_address}
+
+EOF
+
+    # Docker information if installed
+    if [[ "${INSTALL_DOCKER:-false}" == "true" ]]; then
+        cat >> "${summary_file}" << EOF
+Docker:
+  - Status: Installed and running
+  - Socket: /var/run/docker.sock
+  - Description: Container runtime for additional services
+
+EOF
+    fi
+
+    cat >> "${summary_file}" << EOF
+------------------------------------------------------------
+System Information:
+------------------------------------------------------------
+- Configuration file: ${CONFIG_FILE}
+- Installation log: ${LOG_FILE}
+- System distribution: ${DISTRO_NAME} ${DISTRO_VERSION}
+- Kernel: $(uname -r)
+
+------------------------------------------------------------
+Security Notes:
+------------------------------------------------------------
+- Firewall is active and configured
+- Fail2ban is monitoring for suspicious activity
+- SSH uses Ed25519 keys for enhanced security
+- Root login via SSH is disabled
+EOF
+
+    if [[ "${ENABLE_AUTO_UPDATES:-false}" == "true" ]]; then
+        echo "- Automatic security updates are enabled" >> "${summary_file}"
+    else
+        echo "- Automatic updates are disabled (manual updates recommended)" >> "${summary_file}"
+    fi
+
+    cat >> "${summary_file}" << EOF
+
+------------------------------------------------------------
+Next Steps:
+------------------------------------------------------------
+1. Reboot the system to ensure all changes take effect
+2. Review the services above and access them using the provided URLs
+3. Configure user accounts and permissions for file sharing
+4. Set up backups for your important data
+5. Regularly check system logs and monitoring
+
+============================================================
+EOF
+
+    log_success "Services summary saved to: ${summary_file}"
+    log_info "You can view this file with: cat ${summary_file}"
 
     echo
     log_info "Next steps:"
@@ -525,12 +663,14 @@ show_installation_summary() {
     echo "  2. Access your NAS via SSH on port ${SSH_PORT:-$DEFAULT_SSH_PORT}"
     echo "  3. Configure file shares through Samba"
     echo "  4. Review firewall rules with: sudo ufw status"
+    echo "  5. Check the services summary file: cat ${summary_file}"
     echo
     log_warning "Important: Please save the following information:"
     echo "  - SSH Port: ${SSH_PORT:-$DEFAULT_SSH_PORT}"
     echo "  - Admin User: ${ADMIN_USER:-$NEW_USER}"
     echo "  - Configuration saved in: ${CONFIG_FILE}"
     echo "  - Installation log: ${LOG_FILE}"
+    echo "  - Services summary: ${summary_file}"
 }
 
 # Main script execution
