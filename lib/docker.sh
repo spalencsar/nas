@@ -115,7 +115,7 @@ install_docker() {
         log_warning "No suitable non-root user found to add to docker group."
         if [[ "${CREATE_NEW_USER_IF_MISSING:-false}" == "true" ]]; then
             local create_user
-            create_user="${NEW_USER:-nasadmin}"
+            create_user="${ADMIN_USER:-${NEW_USER:-nasadmin}}"
             log_info "Creating user '$create_user' and adding to docker group..."
             handle_error sudo useradd -m -s /bin/bash "$create_user"
             handle_error sudo usermod -aG docker "$create_user"

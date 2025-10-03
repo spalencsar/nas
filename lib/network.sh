@@ -203,16 +203,16 @@ configure_ssh() {
     fi
     
     # Create new user if not exists
-    if ! id "${ADMIN_USER:-$NEW_USER}" &>/dev/null; then
-        log_info "Creating user ${ADMIN_USER:-$NEW_USER}..."
-        sudo useradd -m -s /bin/bash "${ADMIN_USER:-$NEW_USER}"
-        sudo usermod -aG sudo "${ADMIN_USER:-$NEW_USER}"
+    if ! id "${ADMIN_USER:-$USER}" &>/dev/null; then
+        log_info "Creating user ${ADMIN_USER:-$USER}..."
+        sudo useradd -m -s /bin/bash "${ADMIN_USER:-$USER}"
+        sudo usermod -aG sudo "${ADMIN_USER:-$USER}"
         
         # Set password
-        local password=$(ask_password "Set password for user ${ADMIN_USER:-$NEW_USER}")
-        echo "${ADMIN_USER:-$NEW_USER}:$password" | sudo chpasswd
+        local password=$(ask_password "Set password for user ${ADMIN_USER:-$USER}")
+        echo "${ADMIN_USER:-$USER}:$password" | sudo chpasswd
         
-        add_rollback_action "sudo userdel -r ${ADMIN_USER:-$NEW_USER}"
+        add_rollback_action "sudo userdel -r ${ADMIN_USER:-$USER}"
     fi
     
     # Configure SSH hardening
@@ -232,7 +232,7 @@ ClientAliveInterval 300
 ClientAliveCountMax 2
 MaxAuthTries 3
 LoginGraceTime 60
-AllowUsers ${ADMIN_USER:-$NEW_USER}
+AllowUsers ${ADMIN_USER:-$USER}
 Protocol 2
 EOF
 
@@ -280,7 +280,7 @@ setup_samba() {
     # Create shared directory
     local share_dir="/srv/samba/shared"
     sudo mkdir -p "$share_dir"
-    sudo chown "${ADMIN_USER:-$NEW_USER}:${ADMIN_USER:-$NEW_USER}" "$share_dir"
+    sudo chown "${ADMIN_USER:-$USER}:${ADMIN_USER:-$USER}" "$share_dir"
     sudo chmod 755 "$share_dir"
     
     # Configure Samba
@@ -308,14 +308,14 @@ setup_samba() {
     browseable = yes
     writable = yes
     guest ok = no
-    valid users = ${ADMIN_USER:-$NEW_USER}
+    valid users = ${ADMIN_USER:-$USER}
     create mask = 0644
     directory mask = 0755
 EOF
 
     # Add Samba user
-    local samba_password=$(ask_password "Set Samba password for user ${ADMIN_USER:-$NEW_USER}")
-    echo -e "$samba_password\n$samba_password" | sudo smbpasswd -a "${ADMIN_USER:-$NEW_USER}"
+    local samba_password=$(ask_password "Set Samba password for user ${ADMIN_USER:-$USER}")
+    echo -e "$samba_password\n$samba_password" | sudo smbpasswd -a "${ADMIN_USER:-$USER}"
     sudo smbpasswd -e "${ADMIN_USER:-$NEW_USER}"
     
     # Start and enable Samba services

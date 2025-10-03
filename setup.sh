@@ -491,7 +491,7 @@ show_installation_summary() {
     echo
     log_info "Installation Summary:"
     echo "  ✓ System updated and secured"
-    echo "  ✓ User '${ADMIN_USER:-$NEW_USER}' created with sudo access"
+    echo "  ✓ User '${ADMIN_USER:-$USER}' created with sudo access"
     echo "  ✓ SSH configured on port ${SSH_PORT:-$DEFAULT_SSH_PORT}"
     echo "  ✓ Samba file sharing configured"
     echo "  ✓ Firewall configured and enabled"
@@ -531,7 +531,7 @@ show_installation_summary() {
 
 Installation Date: $(date)
 System IP Address: ${ip_address}
-Admin User: ${ADMIN_USER:-$NEW_USER}
+Admin User: ${ADMIN_USER:-$USER}
 SSH Port: ${SSH_PORT:-$DEFAULT_SSH_PORT}
 
 ------------------------------------------------------------
@@ -541,8 +541,8 @@ Installed Services and Access Information:
 SSH Access:
   - Host: ${ip_address}
   - Port: ${SSH_PORT:-$DEFAULT_SSH_PORT}
-  - User: ${ADMIN_USER:-$NEW_USER}
-  - Command: ssh -p ${SSH_PORT:-$DEFAULT_SSH_PORT} ${ADMIN_USER:-$NEW_USER}@${ip_address}
+  - User: ${ADMIN_USER:-$USER}
+  - Command: ssh -p ${SSH_PORT:-$DEFAULT_SSH_PORT} ${ADMIN_USER:-$USER}@${ip_address}
 
 EOF
 
@@ -677,7 +677,7 @@ EOF
     echo
     log_warning "Important: Please save the following information:"
     echo "  - SSH Port: ${SSH_PORT:-$DEFAULT_SSH_PORT}"
-    echo "  - Admin User: ${ADMIN_USER:-$NEW_USER}"
+    echo "  - Admin User: ${ADMIN_USER:-$USER}"
     echo "  - Configuration saved in: ${CONFIG_FILE}"
     echo "  - Installation log: ${LOG_FILE}"
     echo "  - Services summary: ${summary_file}"
