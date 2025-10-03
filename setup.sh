@@ -272,8 +272,8 @@ load_or_create_config() {
     if load_config; then
         log_info "Configuration loaded from ${CONFIG_FILE}"
         if ! validate_config; then
-            log_error "Configuration validation failed"
-            exit 1
+            log_warning "Configuration validation failed - creating new configuration"
+            create_interactive_config
         fi
     else
         log_info "Creating new configuration..."
