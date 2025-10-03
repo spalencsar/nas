@@ -52,8 +52,20 @@ install_docker() {
             ;;
     esac
 
-    # Add user to the docker group
-    handle_error sudo usermod -aG docker "$NEW_USER"
+    # Add user to the docker group if the user exists. Some installs use a
+    # non-root admin account stored in NEW_USER; if it does not exist, skip
+    # adding to the docker group to avoid failing the whole setup.
+    if id -u "$NEW_USER" >/dev/null 2>&1; then
+        handle_error sudo usermod -aG docker "$NEW_USER"
+    else
+        log_warning "User '$NEW_USER' does not exist; skipping usermod -aG docker."
+        # Optionally create the user if the admin wants that behavior. Default is false.
+        if [[ "${CREATE_NEW_USER_IF_MISSING:-false}" == "true" ]]; then
+            log_info "Creating user '$NEW_USER' and adding to docker group..."
+            handle_error sudo useradd -m -s /bin/bash "$NEW_USER"
+            handle_error sudo usermod -aG docker "$NEW_USER"
+        fi
+    fi
 
     handle_error sudo systemctl enable docker
     handle_error sudo systemctl start docker
