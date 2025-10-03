@@ -70,22 +70,42 @@ install_docker() {
         TARGET_USER="${NEW_USER}"
         log_debug "Using NEW_USER='$TARGET_USER' for docker group"
     else
-        # Try to find a human non-system user (UID >= 1000) who has a normal shell
-        TARGET_USER=$(awk -F: '($3>=1000 && $7!="/usr/sbin/nologin" && $7!="/bin/false"){print $1; exit}' /etc/passwd || true)
+        # Gather human non-system users (UID >= 1000) with a normal shell
+        mapfile -t _candidates < <(awk -F: '($3>=1000 && $7!="/usr/sbin/nologin" && $7!="/bin/false"){print $1}' /etc/passwd | sort)
 
-        # Prefer a user that is in the sudo group if one exists
-        if [[ -n "$TARGET_USER" ]]; then
-            if ! id -nG "$TARGET_USER" | grep -qw sudo; then
-                local sudo_member
-                sudo_member=$(getent group sudo | awk -F: '{print $4}' | tr ',' '\n' | awk 'NF{print $1; exit}') || true
-                if [[ -n "$sudo_member" ]]; then
-                    TARGET_USER="$sudo_member"
-                fi
-            fi
-        fi
-
-        if [[ -n "$TARGET_USER" ]]; then
+        if [[ ${#_candidates[@]} -eq 1 ]]; then
+            TARGET_USER="${_candidates[0]}"
             log_info "Auto-detected user '$TARGET_USER' to add to docker group"
+        elif [[ ${#_candidates[@]} -gt 1 ]]; then
+            log_info "Multiple candidate user accounts found. Please choose which to add to the docker group:"
+            local i=0
+            for u in "${_candidates[@]}"; do
+                i=$((i+1))
+                if id -nG "$u" 2>/dev/null | grep -qw sudo; then
+                    echo "  $i) $u (sudo)"
+                else
+                    echo "  $i) $u"
+                fi
+            done
+            echo "  0) None / create new user"
+
+            # Ask until valid selection
+            local sel
+            while true; do
+                sel=$(ask_input "Select user number to add to docker group (0 to skip)" "1" )
+                if [[ "$sel" =~ ^[0-9]+$ ]] && [[ "$sel" -ge 0 ]] && [[ "$sel" -le ${#_candidates[@]} ]]; then
+                    break
+                fi
+                log_warning "Please enter a number between 0 and ${#_candidates[@]}"
+            done
+
+            if [[ "$sel" -eq 0 ]]; then
+                TARGET_USER=""
+            else
+                TARGET_USER="${_candidates[$((sel-1))]}"
+            fi
+        else
+            TARGET_USER=""
         fi
     fi
 
