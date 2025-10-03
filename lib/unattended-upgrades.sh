@@ -90,6 +90,3 @@ if ! command -v log_info &>/dev/null; then
     log_success() { echo "[SUCCESS] $1"; }
     log_error() { echo "[ERROR] $1" >&2; }
 fi
-
-# Main execution
-configure_unattended_upgrades
