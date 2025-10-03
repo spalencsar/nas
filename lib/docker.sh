@@ -123,7 +123,41 @@ install_docker() {
     fi
 
     handle_error sudo systemctl enable docker
-    handle_error sudo systemctl start docker
+
+    # Try to start docker; if starting fails, attempt automated repair and retry.
+    # If still failing after retries, disable Docker for the remainder of the setup
+    # to avoid aborting the whole installation (docker-dependent services will be skipped).
+    local _start_retries=2
+    local _attempt=0
+    local _started=false
+    local _repair_script="${SCRIPT_DIR:-$(pwd)}/scripts/repair_docker.sh"
+
+    while [[ $_attempt -lt $_start_retries ]]; do
+        if sudo systemctl start docker; then
+            _started=true
+            log_success "docker.service started successfully"
+            break
+        else
+            log_warning "docker.service failed to start (attempt $(( _attempt + 1 ))/$_start_retries)"
+            if [[ -x "$_repair_script" ]]; then
+                log_info "Running repair script $_repair_script to fix docker configuration..."
+                sudo bash "$_repair_script" || log_warning "Repair script exited with non-zero status"
+            else
+                log_info "Repair script not found at $_repair_script; attempting local repair via configure_docker_daemon if available"
+                if declare -F configure_docker_daemon >/dev/null 2>&1; then
+                    configure_docker_daemon || log_warning "configure_docker_daemon returned non-zero"
+                fi
+            fi
+            sleep 2
+        fi
+        _attempt=$((_attempt + 1))
+    done
+
+    if [[ "$_started" != true ]]; then
+        log_error "docker.service failed to start after $_start_retries attempts. Disabling Docker for remainder of setup to continue other tasks."
+        # Prevent subsequent steps from attempting Docker-dependent installs
+        INSTALL_DOCKER=false
+    fi
 
     # Configure Docker data directory and optimization
     if [[ "$DOCKER_DATA_DIR" != "$DEFAULT_DOCKER_DATA_DIR" ]]; then
