@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Provide a safe default for SUDO in case the environment or caller
+# expects a SUDO variable. Some systems or callers may unset this and
+# scripts using `${SUDO}` should not fail with unbound variable under
+# `set -u`.
+SUDO=${SUDO:-sudo}
+
 install_docker() {
     log_info "Installing Docker..."
 
@@ -47,15 +53,15 @@ install_docker() {
     esac
 
     # Add user to the docker group
-    handle_error $SUDO usermod -aG docker "$NEW_USER"
+    handle_error sudo usermod -aG docker "$NEW_USER"
 
-    handle_error $SUDO systemctl enable docker
-    handle_error $SUDO systemctl start docker
+    handle_error sudo systemctl enable docker
+    handle_error sudo systemctl start docker
 
     # Configure Docker data directory and optimization
     if [[ "$DOCKER_DATA_DIR" != "$DEFAULT_DOCKER_DATA_DIR" ]]; then
         log_info "Configuring Docker data directory to $DOCKER_DATA_DIR..."
-        handle_error $SUDO mkdir -p "$DOCKER_DATA_DIR"
+        handle_error sudo mkdir -p "$DOCKER_DATA_DIR"
     fi
     
     # Create optimized Docker daemon configuration
@@ -81,10 +87,10 @@ install_docker() {
 configure_docker_daemon() {
     log_info "Configuring optimized Docker daemon..."
     
-    $SUDO mkdir -p /etc/docker
+    sudo mkdir -p /etc/docker
     
     # Create optimized daemon.json
-    cat << EOF | $SUDO tee /etc/docker/daemon.json
+    cat << EOF | sudo tee /etc/docker/daemon.json
 {
   "storage-driver": "overlay2",
   "log-driver": "json-file",
@@ -109,11 +115,11 @@ EOF
     # Add data-root if custom directory is specified
     if [[ "$DOCKER_DATA_DIR" != "$DEFAULT_DOCKER_DATA_DIR" ]]; then
         # Modify the daemon.json to include data-root
-        $SUDO sed -i "s|{|{\n  \"data-root\": \"$DOCKER_DATA_DIR\",|" /etc/docker/daemon.json
+        sudo sed -i "s|{|{\n  \"data-root\": \"$DOCKER_DATA_DIR\",|" /etc/docker/daemon.json
     fi
     
     # Restart Docker to apply configuration
-    handle_error $SUDO systemctl restart docker
+    handle_error sudo systemctl restart docker
     
     log_success "Docker daemon optimized"
 }
