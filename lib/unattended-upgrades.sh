@@ -7,8 +7,12 @@ configure_unattended_upgrades() {
     
     case $DISTRO in
         ubuntu|debian)
-            handle_error sudo apt-get install -y unattended-upgrades apt-listchanges
-            sudo dpkg-reconfigure -plow unattended-upgrades
+            # Preseed debconf to avoid interactive prompts and install non-interactively
+            sudo debconf-set-selections <<DEBCONF
+unattended-upgrades unattended-upgrades/enable_auto_updates boolean true
+DEBCONF
+            handle_error sudo DEBIAN_FRONTEND=noninteractive apt-get install -y unattended-upgrades apt-listchanges
+            sudo DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive unattended-upgrades || true
             
             # Configure unattended-upgrades for security only
             sudo tee /etc/apt/apt.conf.d/50unattended-upgrades > /dev/null <<EOF
