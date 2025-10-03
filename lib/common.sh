@@ -440,6 +440,46 @@ setup_basic_monitoring() {
     log_success "Basic monitoring tools installed"
 }
 
+# Preflight: check for running apt/dpkg processes and leftover locks, attempt safe cleanup
+preflight_apt_cleanup() {
+    log_info "Checking for running apt/dpkg processes and lock files..."
+
+    # List processes matching common package manager names
+    local procs
+    procs=$(pgrep -a -f "apt-get|apt|dpkg|unattended-upgrade|aptitude" 2>/dev/null || true)
+    if [[ -n "$procs" ]]; then
+        log_warning "Found running package processes:"
+        echo "$procs"
+        log_info "Waiting up to 15s for them to finish gracefully..."
+        for i in {1..15}; do
+            sleep 1
+            if ! pgrep -f "apt-get|apt|dpkg|unattended-upgrade|aptitude" >/dev/null; then
+                break
+            fi
+        done
+    fi
+
+    if pgrep -f "apt-get|apt|dpkg|unattended-upgrade|aptitude" >/dev/null; then
+        log_warning "Package processes still running; attempting graceful stop..."
+        sudo pkill -15 -f "apt-get|apt|unattended-upgrade|aptitude" || true
+        sleep 2
+        if pgrep -f "apt-get|apt|dpkg|unattended-upgrade|aptitude" >/dev/null; then
+            log_warning "Forcing kill of remaining package processes..."
+            sudo pkill -9 -f "apt-get|apt|dpkg|unattended-upgrade|aptitude" || true
+        fi
+    fi
+
+    # Remove common lock files if present (safe to remove if processes are gone)
+    sudo rm -f /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/cache/apt/archives/lock /var/lib/apt/lists/lock || true
+
+    # Try to finish interrupted package configuration
+    log_info "Running 'dpkg --configure -a' and 'apt-get -f install' (non-interactive) to fix package state..."
+    sudo dpkg --configure -a || true
+    sudo env DEBIAN_FRONTEND=noninteractive APT_LISTCHANGES_FRONTEND=none apt-get -y -f install || true
+
+    log_success "Apt/dpkg preflight cleanup completed"
+}
+
 # Install additional components
 install_additional_components() {
     log_info "Installing additional useful components..."

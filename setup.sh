@@ -541,6 +541,7 @@ main() {
     
     # Main installation
     log_info "Starting installation process..."
+    preflight_apt_cleanup
     update_system
     run_installation
     
