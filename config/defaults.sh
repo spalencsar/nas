@@ -5,15 +5,7 @@
 # Script metadata
 SCRIPT_VERSION="2.1.1"
 SCRIPT_NAME="NAS Setup Script"
-SCRIPT_AUTH    # Validate Docker dependencies
-    if [[ "${INSTALL_DOCKER:-false}" != "true" ]]; then
-        if [[ "${INSTALL_VAULTWARDEN:-false}" == "true" ]] || [[ "${INSTALL_JELLYFIN:-false}" == "true" ]] || [[ "${INSTALL_PORTAINER:-false}" == "true" ]]; then
-            log_warning "Docker-abhängige Services sind aktiviert, aber Docker ist deaktiviert. Erzwinge neue Konfiguration."
-            return 1  # Force create_interactive_config
-        fi
-    fi
-    
-    return $errors Palencsár"
+SCRIPT_AUTHOR="Sebastian Palencsár"
 
 # Directories and files
 LOG_FILE="/var/log/nas_setup.log"
@@ -155,17 +147,13 @@ validate_config() {
         fi
     done
     
-# Validate Docker dependencies
+    # Validate Docker dependencies
     if [[ "${INSTALL_DOCKER:-false}" != "true" ]]; then
         if [[ "${INSTALL_VAULTWARDEN:-false}" == "true" ]] || [[ "${INSTALL_JELLYFIN:-false}" == "true" ]] || [[ "${INSTALL_PORTAINER:-false}" == "true" ]]; then
-            log_warning "Docker-abhängige Services sind aktiviert, aber Docker ist deaktiviert. Erzwinge neue Konfiguration."
-            return 1  # Force create_interactive_config
+            log_warning "Docker-abhängige Services sind aktiviert, aber Docker ist deaktiviert. Bitte wähle Docker oder deaktiviere diese Services."
+            ((errors++))
         fi
     fi
-    
-    # Temporarily force new configuration for debugging
-    log_warning "Erzwinge neue Konfiguration für Debugging-Zwecke."
-    return 1
-    
+
     return $errors
 }
