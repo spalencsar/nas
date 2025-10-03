@@ -270,6 +270,8 @@ load_or_create_config() {
     log_info "Loading configuration..."
     
     # Temporarily force new configuration for debugging
+    # Remove any existing config file to ensure clean state
+    rm -f "${CONFIG_FILE}"
     log_info "Creating new configuration..."
     create_interactive_config
     load_config  # Load the new configuration
