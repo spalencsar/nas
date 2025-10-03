@@ -313,6 +313,8 @@ create_interactive_config() {
     # User configuration
     local username=$(ask_input "Admin username" "$NEW_USER" "validate_username")
     save_config "ADMIN_USER" "$username"
+    # Ensure the configured admin user exists (offer interactive creation)
+    ensure_user_exists_interactive "$username" || log_warning "Admin user '$username' not created; some features may require it."
     
     # Network configuration
     if ask_yes_no "Configure static IP?" "n"; then

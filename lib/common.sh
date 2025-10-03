@@ -326,6 +326,46 @@ load_config() {
     fi
 }
 
+# Ensure a given user exists; if not, offer to create them interactively.
+# Usage: ensure_user_exists_interactive <username>
+ensure_user_exists_interactive() {
+    local user="$1"
+
+    if id -u "$user" >/dev/null 2>&1; then
+        log_debug "User '$user' already exists"
+        return 0
+    fi
+
+    log_warning "User '$user' does not exist on this system."
+    if ! ask_yes_no "Create user '$user' now?" "y"; then
+        log_info "Skipping creation of user '$user'. Some features may require this user to exist."
+        return 1
+    fi
+
+    # Create user and set password interactively
+    log_info "Creating user '$user'..."
+    if sudo useradd -m -s /bin/bash "$user"; then
+        log_success "User '$user' created"
+        # Add to sudo group
+        sudo usermod -aG sudo "$user" || true
+
+        # Ask for password
+        local pw
+        pw=$(ask_password "Set password for user $user")
+        echo "$user:$pw" | sudo chpasswd
+
+        # Record rollback action
+        if declare -F add_rollback_action >/dev/null 2>&1; then
+            add_rollback_action "sudo userdel -r $user || true"
+        fi
+
+        return 0
+    else
+        log_error "Failed to create user '$user'"
+        return 2
+    fi
+}
+
 # Cleanup function
 cleanup() {
     log_info "Performing cleanup..."
