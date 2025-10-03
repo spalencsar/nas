@@ -36,7 +36,7 @@ install_nfs() {
     
     # Remove any existing entries for this export directory to avoid duplicates
     if grep -q "^$export_dir " "$exports_file" 2>/dev/null; then
-        sudo sed -i "/^$export_dir /d" "$exports_file"
+        sudo sed -i "\#^$export_dir #d" "$exports_file"
         log_debug "Removed existing NFS export entries for $export_dir"
     fi
     
