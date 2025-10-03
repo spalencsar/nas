@@ -57,18 +57,48 @@ install_docker() {
             ;;
     esac
 
-    # Add user to the docker group if the user exists. Some installs use a
-    # non-root admin account stored in NEW_USER; if it does not exist, skip
-    # adding to the docker group to avoid failing the whole setup.
-    if id -u "$NEW_USER" >/dev/null 2>&1; then
-        handle_error sudo usermod -aG docker "$NEW_USER"
+    # Determine which user to add to the docker group.
+    # Prefer ADMIN_USER if configured, then NEW_USER. If neither exists,
+    # try to auto-detect a suitable non-root sudo-capable user. Only create
+    # a new user if CREATE_NEW_USER_IF_MISSING=true.
+    TARGET_USER=""
+
+    if [[ -n "${ADMIN_USER:-}" ]] && id -u "${ADMIN_USER}" >/dev/null 2>&1; then
+        TARGET_USER="${ADMIN_USER}"
+        log_debug "Using ADMIN_USER='$TARGET_USER' for docker group"
+    elif [[ -n "${NEW_USER:-}" ]] && id -u "${NEW_USER}" >/dev/null 2>&1; then
+        TARGET_USER="${NEW_USER}"
+        log_debug "Using NEW_USER='$TARGET_USER' for docker group"
     else
-        log_warning "User '$NEW_USER' does not exist; skipping usermod -aG docker."
-        # Optionally create the user if the admin wants that behavior. Default is false.
+        # Try to find a human non-system user (UID >= 1000) who has a normal shell
+        TARGET_USER=$(awk -F: '($3>=1000 && $7!="/usr/sbin/nologin" && $7!="/bin/false"){print $1; exit}' /etc/passwd || true)
+
+        # Prefer a user that is in the sudo group if one exists
+        if [[ -n "$TARGET_USER" ]]; then
+            if ! id -nG "$TARGET_USER" | grep -qw sudo; then
+                local sudo_member
+                sudo_member=$(getent group sudo | awk -F: '{print $4}' | tr ',' '\n' | awk 'NF{print $1; exit}') || true
+                if [[ -n "$sudo_member" ]]; then
+                    TARGET_USER="$sudo_member"
+                fi
+            fi
+        fi
+
+        if [[ -n "$TARGET_USER" ]]; then
+            log_info "Auto-detected user '$TARGET_USER' to add to docker group"
+        fi
+    fi
+
+    if [[ -n "$TARGET_USER" ]]; then
+        handle_error sudo usermod -aG docker "$TARGET_USER"
+    else
+        log_warning "No suitable non-root user found to add to docker group."
         if [[ "${CREATE_NEW_USER_IF_MISSING:-false}" == "true" ]]; then
-            log_info "Creating user '$NEW_USER' and adding to docker group..."
-            handle_error sudo useradd -m -s /bin/bash "$NEW_USER"
-            handle_error sudo usermod -aG docker "$NEW_USER"
+            local create_user
+            create_user="${NEW_USER:-nasadmin}"
+            log_info "Creating user '$create_user' and adding to docker group..."
+            handle_error sudo useradd -m -s /bin/bash "$create_user"
+            handle_error sudo usermod -aG docker "$create_user"
         fi
     fi
 
