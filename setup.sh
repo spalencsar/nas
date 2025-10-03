@@ -301,12 +301,13 @@ create_interactive_config() {
     fi
     
     # Service selection
-    save_config "INSTALL_DOCKER" "$(ask_yes_no "Install Docker?" "y" && echo "true" || echo "false")"
+    local install_docker=$(ask_yes_no "Install Docker?" "y" && echo "true" || echo "false")
+    save_config "INSTALL_DOCKER" "$install_docker"
     save_config "INSTALL_NFS" "$(ask_yes_no "Install NFS?" "n" && echo "true" || echo "false")"
     save_config "INSTALL_NETDATA" "$(ask_yes_no "Install Netdata monitoring?" "y" && echo "true" || echo "false")"
     
     # Docker-dependent services
-    if [[ "${INSTALL_DOCKER:-false}" == "true" ]]; then
+    if [[ "$install_docker" == "true" ]]; then
         save_config "INSTALL_VAULTWARDEN" "$(ask_yes_no "Install Vaultwarden password manager?" "n" && echo "true" || echo "false")"
         save_config "INSTALL_JELLYFIN" "$(ask_yes_no "Install Jellyfin media server?" "n" && echo "true" || echo "false")"
         save_config "INSTALL_PORTAINER" "$(ask_yes_no "Install Portainer Docker management?" "n" && echo "true" || echo "false")"
