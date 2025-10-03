@@ -43,7 +43,8 @@ RECOMMENDED_RAM_MB=4096
 # Security settings
 ENABLE_FAIL2BAN=true
 ENABLE_UFW=true
-ENABLE_AUTO_UPDATES=true
+# Automatic security updates are optional. Default is OFF to keep setup non-interactive.
+ENABLE_AUTO_UPDATES=false
 SECURE_SSH=true
 
 # Debug and logging

@@ -339,6 +339,9 @@ create_interactive_config() {
         save_config "INSTALL_PORTAINER" "false"
     fi
     
+    # Automatic updates (optional)
+    save_config "ENABLE_AUTO_UPDATES" "$(ask_yes_no "Enable automatic security updates (unattended-upgrades)?" "n" && echo "true" || echo "false")"
+
     save_config "INSTALL_WEBMIN" "$(ask_yes_no "Install Webmin web interface?" "n" && echo "true" || echo "false")"
     
     log_success "Configuration created and saved to ${CONFIG_FILE}"
@@ -400,7 +403,12 @@ run_installation() {
     current_step=$((current_step + 1)); log_debug "run_installation: about to implement security measures (step $current_step/$total_steps)"; show_progress $current_step $total_steps "Implementing security measures"
     secure_shared_memory
     install_fail2ban
-    configure_automatic_updates
+    # Configure automatic updates only if user opted in
+    if [[ "${ENABLE_AUTO_UPDATES:-false}" == "true" ]]; then
+        configure_automatic_updates
+    else
+        log_info "Automatic security updates are disabled by configuration"
+    fi
     
     # Optional services
     if [[ "${INSTALL_DOCKER:-false}" == "true" ]]; then
@@ -466,7 +474,11 @@ show_installation_summary() {
     echo "  ✓ Samba file sharing configured"
     echo "  ✓ Firewall configured and enabled"
     echo "  ✓ Fail2ban installed and configured"
-    echo "  ✓ Automatic updates enabled"
+    if [[ "${ENABLE_AUTO_UPDATES:-false}" == "true" ]]; then
+        echo "  ✓ Automatic updates enabled"
+    else
+        echo "  - Automatic updates not enabled (optional)"
+    fi
     
     # Service summary
     if [[ "${INSTALL_DOCKER:-false}" == "true" ]]; then
