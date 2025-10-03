@@ -274,10 +274,12 @@ load_or_create_config() {
         if ! validate_config; then
             log_warning "Configuration validation failed - creating new configuration"
             create_interactive_config
+            load_config  # Reload the new configuration
         fi
     else
         log_info "Creating new configuration..."
         create_interactive_config
+        load_config  # Load the new configuration
     fi
 }
 
