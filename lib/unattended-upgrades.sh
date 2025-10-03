@@ -12,7 +12,8 @@ configure_unattended_upgrades() {
 unattended-upgrades unattended-upgrades/enable_auto_updates boolean true
 DEBCONF
             # Install non-interactively and avoid dpkg prompts by forcing noninteractive frontend
-            sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -y unattended-upgrades apt-listchanges
+                # Use 'sudo env' to ensure environment vars are set for the root process
+                handle_error sudo env DEBIAN_FRONTEND=noninteractive APT_LISTCHANGES_FRONTEND=none apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -y unattended-upgrades apt-listchanges
             # Do not call dpkg-reconfigure interactively; we will write the config files directly
             
             # Configure unattended-upgrades for security only
