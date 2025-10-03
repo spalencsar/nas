@@ -6,6 +6,9 @@
 optimize_system_performance() {
     log_info "Optimizing system performance..."
     
+    # Memory optimization for NAS workloads
+    configure_memory_optimization
+    
     # Optimize kernel parameters
     sudo tee -a /etc/sysctl.conf > /dev/null <<EOF
 
@@ -54,6 +57,25 @@ EOF
     create_performance_monitor
     
     log_success "System performance optimized"
+}
+
+# Memory optimization for NAS workloads
+configure_memory_optimization() {
+    log_info "Configuring memory optimization for NAS workloads..."
+    
+    cat << EOF | sudo tee /etc/sysctl.d/99-nas-optimization.conf
+# NAS Memory Optimization for better file caching
+vm.swappiness=10
+vm.vfs_cache_pressure=50
+EOF
+    
+    # Apply immediately
+    sudo sysctl -p /etc/sysctl.d/99-nas-optimization.conf
+    
+    # Add to rollback
+    add_rollback_action "sudo rm -f /etc/sysctl.d/99-nas-optimization.conf && sudo sysctl -p"
+    
+    log_success "Memory optimization configured"
 }
 
 # Create performance monitoring script

@@ -68,6 +68,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Netdata** for real-time system monitoring
 - **Jellyfin** media server for multimedia content
 - **Vaultwarden** for secure password management
+- **Webmin** web-based system administration interface
 - **System Performance Tracking** with automatic reports
 - **Comprehensive Unit Testing** framework with extensive test coverage
 
@@ -130,6 +131,7 @@ The script guides you through an interactive configuration:
 - **Vaultwarden:** Password manager with security hardening
 - **Jellyfin:** Media server with modern GPG keys
 - **Portainer:** Docker management with HTTPS
+- **Webmin:** Web-based system administration interface
 
 ### Security Configuration
 - **Firewall Rules:** IPv4/IPv6 automatic based on selected services
@@ -158,6 +160,7 @@ nas/
 │   ├── vaultwarden.sh         # Vaultwarden password manager
 │   ├── jellyfin.sh            # Jellyfin media server
 │   ├── portainer.sh           # Portainer Docker management
+│   ├── webmin.sh              # Webmin web interface
 │   ├── unattended-upgrades.sh # Automatic system updates
 │   └── performance.sh         # Performance optimization
 ├── tests/
@@ -182,6 +185,7 @@ nas/
 | Jellyfin | 1900 | UDP | DLNA Discovery | ✅ |
 | Portainer | 9000 | TCP | Docker Management (HTTPS) | ✅ |
 | Vaultwarden | 8080 | TCP | Password Manager | ✅ |
+| Webmin | 10000 | TCP | Web Administration Interface | ✅ |
 | Docker API | 2375, 2376 | TCP | Docker Remote API | ✅ |
 
 ## 🛡️ Security Features

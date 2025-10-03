@@ -46,6 +46,7 @@ source "${SCRIPT_DIR}/lib/unattended-upgrades.sh"
 source "${SCRIPT_DIR}/lib/vaultwarden.sh"
 source "${SCRIPT_DIR}/lib/jellyfin.sh"
 source "${SCRIPT_DIR}/lib/portainer.sh"
+source "${SCRIPT_DIR}/lib/webmin.sh"
 source "${SCRIPT_DIR}/lib/performance.sh"
 
 # Initialize logging
@@ -306,6 +307,7 @@ create_interactive_config() {
     save_config "INSTALL_VAULTWARDEN" "$(ask_yes_no "Install Vaultwarden password manager?" "n" && echo "true" || echo "false")"
     save_config "INSTALL_JELLYFIN" "$(ask_yes_no "Install Jellyfin media server?" "n" && echo "true" || echo "false")"
     save_config "INSTALL_PORTAINER" "$(ask_yes_no "Install Portainer Docker management?" "n" && echo "true" || echo "false")"
+    save_config "INSTALL_WEBMIN" "$(ask_yes_no "Install Webmin web interface?" "n" && echo "true" || echo "false")"
     
     log_success "Configuration created and saved to ${CONFIG_FILE}"
 }
@@ -339,7 +341,7 @@ update_system() {
 
 # Main installation orchestrator
 run_installation() {
-    local total_steps=12
+    local total_steps=13
     local current_step=0
     
     log_info "Starting NAS installation process..."
@@ -410,6 +412,14 @@ run_installation() {
     else
         ((current_step++))
     fi
+    
+    if [[ "${INSTALL_WEBMIN:-false}" == "true" ]]; then
+        ((current_step++)); show_progress $current_step $total_steps "Installing Webmin"
+        install_webmin
+        configure_webmin
+    else
+        ((current_step++))
+    fi
 }
 
 # Installation summary
@@ -441,6 +451,9 @@ show_installation_summary() {
     fi
     if [[ "${INSTALL_PORTAINER:-false}" == "true" ]]; then
         echo "  ✓ Portainer Docker management: http://$(hostname -I | awk '{print $1}'):9000"
+    fi
+    if [[ "${INSTALL_WEBMIN:-false}" == "true" ]]; then
+        echo "  ✓ Webmin web interface: https://$(hostname -I | awk '{print $1}'):10000"
     fi
     
     echo

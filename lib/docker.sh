@@ -52,14 +52,15 @@ install_docker() {
     handle_error sudo systemctl enable docker
     handle_error sudo systemctl start docker
 
-    # Configure Docker data directory
+    # Configure Docker data directory and optimization
     if [[ "$DOCKER_DATA_DIR" != "$DEFAULT_DOCKER_DATA_DIR" ]]; then
         log_info "Configuring Docker data directory to $DOCKER_DATA_DIR..."
         handle_error sudo mkdir -p "$DOCKER_DATA_DIR"
-        echo "{\"data-root\": \"$DOCKER_DATA_DIR\"}" | sudo tee /etc/docker/daemon.json > /dev/null
-        handle_error sudo systemctl restart docker
     fi
-
+    
+    # Create optimized Docker daemon configuration
+    configure_docker_daemon
+    
     export DOCKER_CONTENT_TRUST=1
 
     log_info "Docker installed successfully."
@@ -74,4 +75,45 @@ install_docker() {
     echo "   systemctl --user enable docker"
     echo "5. Enable linger for the user:"
     echo "   sudo loginctl enable-linger \$(whoami)"
+}
+
+# Configure optimized Docker daemon
+configure_docker_daemon() {
+    log_info "Configuring optimized Docker daemon..."
+    
+    sudo mkdir -p /etc/docker
+    
+    # Create optimized daemon.json
+    cat << EOF | sudo tee /etc/docker/daemon.json
+{
+  "storage-driver": "overlay2",
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "3"
+  },
+  "exec-opts": ["native.cgroupdriver=systemd"],
+  "live-restore": true,
+  "userland-proxy": false,
+  "experimental": false,
+  "metrics-addr": "0.0.0.0:9323",
+  "default-ulimits": {
+    "nofile": {
+      "Hard": 64000,
+      "Name": "nofile",
+      "Soft": 64000
+    }
+  }
+EOF
+    
+    # Add data-root if custom directory is specified
+    if [[ "$DOCKER_DATA_DIR" != "$DEFAULT_DOCKER_DATA_DIR" ]]; then
+        # Modify the daemon.json to include data-root
+        sudo sed -i "s|{|{\n  \"data-root\": \"$DOCKER_DATA_DIR\",|" /etc/docker/daemon.json
+    fi
+    
+    # Restart Docker to apply configuration
+    handle_error sudo systemctl restart docker
+    
+    log_success "Docker daemon optimized"
 }
