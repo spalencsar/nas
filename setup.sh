@@ -118,6 +118,7 @@ detect_distro() {
         detected_distro=${ID,,}  # Convert to lowercase
         detected_version=$VERSION_ID
         detected_codename=${VERSION_CODENAME:-${UBUNTU_CODENAME:-""}}
+        detected_pretty_name=$PRETTY_NAME
         detection_method="/etc/os-release"
         log_debug "Detected via /etc/os-release: $PRETTY_NAME"
     fi
@@ -213,6 +214,7 @@ detect_distro() {
     # Parse and normalize version
     DISTRO_VERSION=$(normalize_version "$detected_version")
     DISTRO_CODENAME=$detected_codename
+    DISTRO_NAME=${detected_pretty_name:-$DISTRO}
 
     log_info "Distribution detected: $DISTRO $DISTRO_VERSION ($detection_method)"
     if [[ -n "$DISTRO_CODENAME" ]]; then
@@ -237,6 +239,7 @@ detect_distro() {
     export DISTRO DETECTED_DISTRO=$DISTRO
     export DISTRO_VERSION DETECTED_VERSION=$DISTRO_VERSION
     export DISTRO_CODENAME DETECTED_CODENAME=$DISTRO_CODENAME
+    export DISTRO_NAME
 }
 
 # System requirements check
