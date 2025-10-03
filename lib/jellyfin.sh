@@ -55,12 +55,21 @@ install_jellyfin() {
     log_info "Jellyfin installation completed."
 }
 
-# Detect the distribution and call the appropriate function
-if [ -f /etc/os-release ]; then
-    . /etc/os-release
-    DISTRO=$ID
-    install_jellyfin
-else
-    log_error "Cannot detect the operating system."
-    exit 1
+# Logging-Funktionen bereitstellen, falls nicht vorhanden
+if ! command -v log_info &>/dev/null; then
+    log_info() { echo "[INFO] $1"; }
+    log_error() { echo "[ERROR] $1" >&2; }
+fi
+
+# Nur ausführen, wenn diese Datei direkt ausgeführt wird (nicht beim `source` in setup.sh).
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Detect the distribution and call the appropriate function
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        DISTRO=$ID
+        install_jellyfin
+    else
+        log_error "Cannot detect the operating system."
+        exit 1
+    fi
 fi

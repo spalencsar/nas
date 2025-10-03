@@ -43,5 +43,9 @@ if ! command -v log_info &>/dev/null; then
     log_error() { echo "[ERROR] $1" >&2; }
 fi
 
-# Hauptlogik
-install_portainer
+# Nur ausführen, wenn diese Datei direkt ausgeführt wird (nicht beim `source` in setup.sh).
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # Hauptlogik
+    install_portainer
+    exit $?
+fi
