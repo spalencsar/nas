@@ -349,12 +349,27 @@ ensure_user_exists_interactive() {
         # Add to sudo group
         sudo usermod -aG sudo "$user" || true
 
+        # Optionally add to docker group if requested or if Docker is to be installed
+        local add_docker_default="n"
+        if [[ "${INSTALL_DOCKER:-false}" == "true" ]]; then
+            add_docker_default="y"
+        fi
+
+        if ask_yes_no "Add user '$user' to 'docker' group?" "$add_docker_default"; then
+            sudo usermod -aG docker "$user" || true
+            # add rollback action for docker group removal
+            if declare -F add_rollback_action >/dev/null 2>&1; then
+                add_rollback_action "sudo gpasswd -d $user docker || true"
+            fi
+            log_info "User '$user' added to docker group"
+        fi
+
         # Ask for password
         local pw
         pw=$(ask_password "Set password for user $user")
         echo "$user:$pw" | sudo chpasswd
 
-        # Record rollback action
+        # Record rollback action for user deletion
         if declare -F add_rollback_action >/dev/null 2>&1; then
             add_rollback_action "sudo userdel -r $user || true"
         fi
