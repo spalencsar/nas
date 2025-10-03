@@ -6,6 +6,11 @@
 # `set -u`.
 SUDO=${SUDO:-sudo}
 
+# Ensure DOCKER_DATA_DIR has a sensible default to avoid unbound variable
+# errors when running under `set -u` and when no custom value is provided
+# by the configuration file. Use DEFAULT_DOCKER_DATA_DIR from defaults.sh.
+DOCKER_DATA_DIR=${DOCKER_DATA_DIR:-${DEFAULT_DOCKER_DATA_DIR:-/var/lib/docker}}
+
 install_docker() {
     log_info "Installing Docker..."
 
