@@ -11,8 +11,9 @@ configure_unattended_upgrades() {
             sudo debconf-set-selections <<DEBCONF
 unattended-upgrades unattended-upgrades/enable_auto_updates boolean true
 DEBCONF
-            handle_error sudo DEBIAN_FRONTEND=noninteractive apt-get install -y unattended-upgrades apt-listchanges
-            sudo DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive unattended-upgrades || true
+            # Install non-interactively and avoid dpkg prompts by forcing noninteractive frontend
+            sudo DEBIAN_FRONTEND=noninteractive apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -y unattended-upgrades apt-listchanges
+            # Do not call dpkg-reconfigure interactively; we will write the config files directly
             
             # Configure unattended-upgrades for security only
             sudo tee /etc/apt/apt.conf.d/50unattended-upgrades > /dev/null <<EOF
