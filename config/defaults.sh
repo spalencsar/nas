@@ -147,5 +147,13 @@ validate_config() {
         fi
     done
     
+    # Validate Docker dependencies
+    if [[ "${INSTALL_DOCKER:-false}" != "true" ]]; then
+        if [[ "${INSTALL_VAULTWARDEN:-false}" == "true" ]] || [[ "${INSTALL_JELLYFIN:-false}" == "true" ]] || [[ "${INSTALL_PORTAINER:-false}" == "true" ]]; then
+            log_warning "Docker-abhängige Services sind aktiviert, aber Docker ist deaktiviert. Erzwinge neue Konfiguration."
+            return 1  # Force create_interactive_config
+        fi
+    fi
+    
     return $errors
 }
