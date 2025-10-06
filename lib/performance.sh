@@ -298,7 +298,17 @@ perform_health_check() {
         
         echo "=== Service Status ==="
         # Check services based on what was configured/installed
-        local services_to_check=("ssh" "sshd")
+        local services_to_check=()
+        
+        # SSH services (distribution-specific)
+        case $DISTRO in
+            opensuse)
+                services_to_check+=("sshd")
+                ;;
+            *)
+                services_to_check+=("ssh" "sshd")
+                ;;
+        esac
         
         # Samba services
         if [[ "${INSTALL_SAMBA:-true}" == "true" ]]; then
