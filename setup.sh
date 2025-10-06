@@ -759,7 +759,17 @@ EOF
     echo "  1. Reboot the system to ensure all changes take effect"
     echo "  2. Access your NAS via SSH on port ${SSH_PORT:-$DEFAULT_SSH_PORT}"
     echo "  3. Configure file shares through Samba"
-    echo "  4. Review firewall rules with: sudo ufw status"
+    case $DISTRO in
+        ubuntu|debian)
+            echo "  4. Review firewall rules with: sudo ufw status"
+            ;;
+        fedora|opensuse)
+            echo "  4. Review firewall rules with: sudo firewall-cmd --list-all"
+            ;;
+        *)
+            echo "  4. Review firewall rules (check system documentation for your firewall tool)"
+            ;;
+    esac
     echo "  5. Check the services summary file: cat ${summary_file}"
     echo
     log_warning "Important: Please save the following information:"
