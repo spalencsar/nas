@@ -412,12 +412,12 @@ cleanup() {
 # Performance monitoring
 get_system_info() {
     log_info "System Information:"
-    echo "  OS: $(lsb_release -d | cut -f2)"
+    echo "  OS: ${DISTRO_NAME:-Unknown}"
     echo "  Kernel: $(uname -r)"
     echo "  CPU: $(lscpu | grep 'Model name' | cut -d: -f2 | xargs)"
     echo "  RAM: $(free -h | awk 'NR==2{printf "%s/%s", $3,$2}')"
     echo "  Disk: $(df -h / | awk 'NR==2{printf "%s/%s (%s used)", $3,$2,$5}')"
-    echo "  Uptime: $(uptime -p)"
+    echo "  Uptime: $(uptime | awk -F'up ' '{print $2}' | awk -F',' '{print $1,$2}' | xargs)"
 }
 
 # Version and compatibility checks
