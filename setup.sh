@@ -387,8 +387,9 @@ update_system() {
             sudo pacman -Syu --noconfirm --quiet
             ;;
         opensuse)
-            sudo zypper refresh -q
-            sudo zypper update -y -q
+            sudo zypper refresh --quiet
+            show_progress 5 10 "System Update"
+            sudo zypper update -y --quiet
             ;;
     esac
     
@@ -732,7 +733,12 @@ main() {
     
     # Main installation
     log_info "Starting installation process..."
-    preflight_apt_cleanup
+    
+    # Run apt cleanup only for apt-based distributions
+    if [[ "$DISTRO" == "ubuntu" || "$DISTRO" == "debian" ]]; then
+        preflight_apt_cleanup
+    fi
+    
     update_system
     run_installation
     
