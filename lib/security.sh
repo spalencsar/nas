@@ -51,7 +51,22 @@ maxretry = 3
 [sshd]
 enabled = true
 port = ${DEFAULT_SSH_PORT:-22}
-backend = systemd
+EOF
+
+    # Configure backend based on distribution
+    case $DISTRO in
+        opensuse)
+            # Use journald backend for openSUSE
+            echo "backend = systemd" | sudo tee -a /etc/fail2ban/jail.local
+            echo "journalmatch = _SYSTEMD_UNIT=sshd.service" | sudo tee -a /etc/fail2ban/jail.local
+            ;;
+        *)
+            # Use systemd backend for other distributions
+            echo "backend = systemd" | sudo tee -a /etc/fail2ban/jail.local
+            ;;
+    esac
+
+    sudo tee -a /etc/fail2ban/jail.local > /dev/null <<EOF
 EOF
 
     # Add distribution-specific log path for SSH
