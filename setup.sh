@@ -494,7 +494,7 @@ run_installation() {
 # Installation summary
 show_installation_summary() {
     local ip_address
-    ip_address=$(hostname -I | awk '{print $1}')
+    ip_address=$(ip addr show | grep 'inet ' | grep -v '127.0.0.1' | head -1 | awk '{print $2}' | cut -d/ -f1)
     local user_home
     if [[ -n "${SUDO_USER:-}" ]]; then
         user_home=$(eval echo "~${SUDO_USER}")
