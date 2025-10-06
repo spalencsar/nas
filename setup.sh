@@ -491,6 +491,76 @@ run_installation() {
     fi
 }
 
+# Restart all installed services to ensure they're active
+restart_all_services() {
+    log_info "Restarting all installed services to ensure they're active..."
+    
+    local services_to_restart=()
+    
+    # Always restart SSH and Fail2ban if configured
+    if [[ "${CONFIGURE_SSH:-true}" == "true" ]]; then
+        services_to_restart+=("ssh" "sshd" "fail2ban")
+    fi
+    
+    # Add Samba services based on distribution
+    if [[ "${INSTALL_SAMBA:-true}" == "true" ]]; then
+        case $DISTRO in
+            opensuse)
+                services_to_restart+=("smb" "nmb")
+                ;;
+            *)
+                services_to_restart+=("smbd" "nmbd")
+                ;;
+        esac
+    fi
+    
+    # Add other services if installed
+    if [[ "${INSTALL_DOCKER:-false}" == "true" ]]; then
+        services_to_restart+=("docker")
+    fi
+    
+    if [[ "${INSTALL_NETDATA:-false}" == "true" ]]; then
+        services_to_restart+=("netdata")
+    fi
+    
+    if [[ "${INSTALL_NFS:-false}" == "true" ]]; then
+        case $DISTRO in
+            opensuse)
+                services_to_restart+=("nfs-server")
+                ;;
+            *)
+                services_to_restart+=("nfs-kernel-server")
+                ;;
+        esac
+    fi
+    
+    # Restart each service if it exists and is enabled
+    for service in "${services_to_restart[@]}"; do
+        if systemctl list-unit-files --type=service | grep -q "^${service}.service"; then
+            if systemctl is-enabled "$service" &>/dev/null 2>&1; then
+                log_info "Restarting service: $service"
+                if sudo systemctl restart "$service"; then
+                    log_success "Service $service restarted successfully"
+                else
+                    log_warning "Failed to restart service: $service"
+                fi
+            else
+                log_debug "Service $service is not enabled, skipping restart"
+            fi
+        else
+            log_debug "Service $service does not exist, skipping"
+        fi
+    done
+    
+    # Special handling for SSH - use our robust restart function
+    if [[ "${CONFIGURE_SSH:-true}" == "true" ]]; then
+        log_info "Ensuring SSH service is properly restarted..."
+        restart_ssh_service
+    fi
+    
+    log_success "Service restart process completed"
+}
+
 # Installation summary
 show_installation_summary() {
     local ip_address
@@ -750,6 +820,7 @@ main() {
     
     # Cleanup and summary
     cleanup
+    restart_all_services
     optimize_nas_performance
     perform_health_check
     show_installation_summary
