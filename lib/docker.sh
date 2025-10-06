@@ -44,12 +44,9 @@ install_docker() {
             handle_error sudo pacman -S --noconfirm docker docker-compose
             ;;
         opensuse)
-            # Add Docker repository
-            handle_error sudo zypper addrepo https://download.docker.com/linux/opensuse/docker-ce.repo
-            handle_error sudo zypper refresh
-
-            # Install Docker CE
-            handle_error sudo zypper install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+            # Install Docker from official openSUSE repositories
+            # Docker CE is not officially supported on openSUSE, use community packages
+            handle_error sudo zypper install -y docker docker-compose
             ;;
         *)
             log_error "Unsupported Linux distribution: $DISTRO"
