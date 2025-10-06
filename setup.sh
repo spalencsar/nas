@@ -387,9 +387,9 @@ update_system() {
             sudo pacman -Syu --noconfirm --quiet
             ;;
         opensuse)
-            sudo zypper refresh -q
+            sudo zypper refresh
             show_progress 5 10 "System Update"
-            sudo zypper update -y -q
+            sudo zypper update -y
             ;;
     esac
     
