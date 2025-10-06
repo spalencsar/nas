@@ -189,8 +189,12 @@ detect_distro() {
 
     # Normalize distribution names
     case $detected_distro in
-        ubuntu|debian|fedora|arch|opensuse)
-            DISTRO=$detected_distro
+        ubuntu|debian|fedora|arch|opensuse|opensuse-leap)
+            if [[ "$detected_distro" == "opensuse-leap" ]]; then
+                DISTRO="opensuse"
+            else
+                DISTRO=$detected_distro
+            fi
             ;;
         "red hat enterprise linux server"|"rhel")
             DISTRO="fedora"  # Treat RHEL as Fedora for package management
