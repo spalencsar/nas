@@ -251,7 +251,14 @@ strict locking = no
 EOF
 
     # Restart Samba services
-    sudo systemctl restart smbd nmbd
+    case $DISTRO in
+        ubuntu|debian|fedora|arch)
+            sudo systemctl restart smbd nmbd
+            ;;
+        opensuse)
+            sudo systemctl restart smb nmb
+            ;;
+    esac
     
     log_success "Samba performance optimized"
 }
@@ -285,7 +292,7 @@ perform_health_check() {
         echo
         
         echo "=== Service Status ==="
-        for service in ssh sshd smbd nmbd docker netdata; do
+        for service in ssh sshd smb nmb docker netdata; do
             if systemctl is-active --quiet "$service" 2>/dev/null; then
                 echo "✅ $service: Active"
             else
@@ -422,7 +429,14 @@ case "${1:-help}" in
     restart-services)
         log_maintenance "Restarting NAS services..."
         
-        for service in smbd nmbd docker netdata; do
+        # Samba services based on distribution
+        if [[ "$DISTRO" == "opensuse" ]]; then
+            samba_services="smb nmb"
+        else
+            samba_services="smbd nmbd"
+        fi
+        
+        for service in $samba_services docker netdata; do
             if systemctl is-enabled "$service" &>/dev/null; then
                 systemctl restart "$service"
                 log_maintenance "Restarted $service"
