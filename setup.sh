@@ -364,7 +364,13 @@ create_interactive_config() {
     # Automatic updates (optional)
     save_config "ENABLE_AUTO_UPDATES" "$(ask_yes_no "Enable automatic security updates (unattended-upgrades)?" "n" && echo "true" || echo "false")"
 
-    save_config "INSTALL_WEBMIN" "$(ask_yes_no "Install Webmin web interface?" "n" && echo "true" || echo "false")"
+    # Webmin (not available on openSUSE)
+    if [[ "$DISTRO" == "opensuse" ]]; then
+        log_info "Webmin is not available for openSUSE Leap - skipping"
+        save_config "INSTALL_WEBMIN" "false"
+    else
+        save_config "INSTALL_WEBMIN" "$(ask_yes_no "Install Webmin web interface?" "n" && echo "true" || echo "false")"
+    fi
     
     log_success "Configuration created and saved to ${CONFIG_FILE}"
 }

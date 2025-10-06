@@ -80,7 +80,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Netdata** for real-time system monitoring
 - **Jellyfin** media server for multimedia content
 - **Vaultwarden** for secure password management
-- **Webmin** web-based system administration interface
+- **Webmin** web-based system administration interface (Ubuntu/Debian/Fedora/Arch only)
 - **System Performance Tracking** with automatic reports
 - **Comprehensive Unit Testing** framework with extensive test coverage
 
@@ -151,7 +151,7 @@ The script guides you through an interactive configuration:
 - **Vaultwarden:** Password manager with security hardening (requires Docker, optional)
 - **Jellyfin:** Media server with modern GPG keys (requires Docker, optional)
 - **Portainer:** Docker management with HTTPS (requires Docker, optional)
-- **Webmin:** Web-based system administration interface (optional)
+- **Webmin:** Web-based system administration interface (Ubuntu/Debian/Fedora/Arch only, optional)
 - **Unattended Upgrades:** Automatic security updates (optional, disabled by default)
 
 ### User Configuration

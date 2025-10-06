@@ -28,10 +28,14 @@ install_webmin() {
             handle_error sudo dnf install -y webmin
             ;;
         opensuse)
-            # Add Webmin repository
-            handle_error sudo zypper addrepo -f https://download.webmin.com/download/yum/webmin-suse.repo
-            handle_error sudo zypper refresh
-            handle_error sudo zypper install -y webmin
+            # Webmin is not available in official openSUSE Leap repositories
+            # For openSUSE, Webmin needs to be installed manually or from third-party repos
+            log_warning "Webmin is not available in official openSUSE Leap repositories"
+            log_info "To install Webmin on openSUSE manually:"
+            log_info "1. Download from https://www.webmin.com/download.html"
+            log_info "2. Follow the manual installation instructions"
+            log_info "3. Webmin will be available at https://your-server:10000"
+            return 1
             ;;
         arch)
             # Webmin is available in AUR
