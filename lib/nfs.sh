@@ -49,11 +49,11 @@ install_nfs() {
     
     # Start and enable NFS services
     case $DISTRO in
-        ubuntu|debian|opensuse)
+        ubuntu|debian)
             handle_error sudo systemctl enable nfs-kernel-server
             handle_error sudo systemctl start nfs-kernel-server
             ;;
-        fedora|arch)
+        fedora|arch|opensuse)
             handle_error sudo systemctl enable nfs-server
             handle_error sudo systemctl start nfs-server
             ;;
