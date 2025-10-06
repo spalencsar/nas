@@ -339,13 +339,15 @@ perform_health_check() {
         echo
         
         echo "=== Security Status ==="
-        # Check Fail2ban if SSH was configured (which includes Fail2ban)
-        if [[ "${CONFIGURE_SSH:-true}" == "true" ]]; then
+        # Check Fail2ban if SSH was configured (which includes Fail2ban) and not openSUSE
+        if [[ "${CONFIGURE_SSH:-true}" == "true" && "$DISTRO" != "opensuse" ]]; then
             if systemctl is-active --quiet fail2ban; then
                 echo "✅ Fail2ban: Active"
             else
                 echo "❌ Fail2ban: Inactive"
             fi
+        elif [[ "$DISTRO" == "opensuse" ]]; then
+            echo "ℹ️ Fail2ban: Not available on openSUSE (compatibility issues)"
         else
             echo "ℹ️ Fail2ban: Not configured"
         fi
