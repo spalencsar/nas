@@ -41,20 +41,25 @@ EOF
     # Apply kernel parameters
     sudo sysctl -p
     
-    # Optimize I/O scheduler for SSDs/HDDs
-    local disk_type=$(lsblk -d -o name,rota | awk 'NR>1 {if($2==0) print "ssd"; else print "hdd"; exit}')
-    local root_disk=$(lsblk -no pkname $(findmnt -n -o source /) | head -n1)
-    
-    if [[ -n "$root_disk" ]] && [[ -w "/sys/block/$root_disk/queue/scheduler" ]]; then
-        if [[ "$disk_type" == "ssd" ]]; then
-            echo "mq-deadline" | sudo tee "/sys/block/$root_disk/queue/scheduler" > /dev/null
-            log_info "Optimized I/O scheduler for SSD"
-        else
-            echo "bfq" | sudo tee "/sys/block/$root_disk/queue/scheduler" > /dev/null
-            log_info "Optimized I/O scheduler for HDD"
-        fi
+    # Optimize I/O scheduler for SSDs/HDDs (skip for Btrfs filesystems)
+    local root_fs_type=$(findmnt -n -o fstype /)
+    if [[ "$root_fs_type" == "btrfs" ]]; then
+        log_info "Btrfs filesystem detected - skipping I/O scheduler optimization (Btrfs handles I/O optimization internally)"
     else
-        log_warning "Could not determine or access root disk scheduler. Skipping I/O optimization."
+        local disk_type=$(lsblk -d -o name,rota | awk 'NR>1 {if($2==0) print "ssd"; else print "hdd"; exit}')
+        local root_disk=$(lsblk -no pkname $(findmnt -n -o source / | sed 's/\[.*\]//') | head -n1)
+        
+        if [[ -n "$root_disk" ]] && [[ -w "/sys/block/$root_disk/queue/scheduler" ]]; then
+            if [[ "$disk_type" == "ssd" ]]; then
+                echo "mq-deadline" | sudo tee "/sys/block/$root_disk/queue/scheduler" > /dev/null
+                log_info "Optimized I/O scheduler for SSD"
+            else
+                echo "bfq" | sudo tee "/sys/block/$root_disk/queue/scheduler" > /dev/null
+                log_info "Optimized I/O scheduler for HDD"
+            fi
+        else
+            log_warning "Could not determine or access root disk scheduler. Skipping I/O optimization."
+        fi
     fi
     
     # Create performance monitoring script
