@@ -292,7 +292,27 @@ perform_health_check() {
         echo
         
         echo "=== Service Status ==="
-        for service in ssh sshd smb nmb docker netdata; do
+        # Check services based on distribution
+        case $DISTRO in
+            opensuse)
+                services_to_check="sshd smb nmb fail2ban"
+                ;;
+            *)
+                services_to_check="ssh sshd smb nmb fail2ban"
+                ;;
+        esac
+        
+        # Always check docker if installed
+        if [[ "${INSTALL_DOCKER:-false}" == "true" ]]; then
+            services_to_check="$services_to_check docker"
+        fi
+        
+        # Check netdata if installed
+        if [[ "${INSTALL_NETDATA:-false}" == "true" ]]; then
+            services_to_check="$services_to_check netdata"
+        fi
+        
+        for service in $services_to_check; do
             if systemctl is-active --quiet "$service" 2>/dev/null; then
                 echo "✅ $service: Active"
             else

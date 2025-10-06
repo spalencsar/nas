@@ -51,6 +51,7 @@ maxretry = 3
 [sshd]
 enabled = true
 port = ${DEFAULT_SSH_PORT:-22}
+backend = systemd
 EOF
 
     # Add distribution-specific log path for SSH

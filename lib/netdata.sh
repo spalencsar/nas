@@ -49,8 +49,8 @@ install_netdata() {
             handle_error sudo pacman -S --noconfirm netdata
             ;;
         opensuse)
-            # Add Netdata repository
-            handle_error sudo zypper addrepo -f https://packagecloud.io/netdata/netdata/opensuse/15.6 netdata
+            # Add Netdata repository (use generic Leap repo)
+            handle_error sudo zypper addrepo -f https://packagecloud.io/netdata/netdata/opensuse/leap netdata
             handle_error sudo zypper --gpg-auto-import-keys refresh
             handle_error sudo zypper install -y netdata
             ;;
