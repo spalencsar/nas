@@ -45,7 +45,9 @@ install_portainer() {
     sleep 5
 
     log_success "Portainer wurde erfolgreich installiert und läuft auf Port 9000 (HTTP) und 9443 (HTTPS)."
-    log_info "Portainer ist nun verfügbar unter: https://$(hostname -I | awk '{print $1}'):9443"
+    local ip_address
+    ip_address=$(ip addr show | grep 'inet ' | grep -v '127.0.0.1' | head -1 | awk '{print $2}' | cut -d/ -f1)
+    log_info "Portainer ist nun verfügbar unter: https://${ip_address}:9443"
 }
 
 # Logging-Funktionen bereitstellen, falls nicht vorhanden
