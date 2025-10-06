@@ -51,7 +51,23 @@ maxretry = 3
 [sshd]
 enabled = true
 port = ${DEFAULT_SSH_PORT:-22}
-logpath = %(sshd_log)s
+EOF
+
+    # Add distribution-specific log path for SSH
+    case $DISTRO in
+        ubuntu|debian|fedora|arch)
+            echo "logpath = /var/log/auth.log" | sudo tee -a /etc/fail2ban/jail.local
+            ;;
+        opensuse)
+            # openSUSE uses /var/log/messages for SSH logs
+            echo "logpath = /var/log/messages" | sudo tee -a /etc/fail2ban/jail.local
+            ;;
+        *)
+            echo "logpath = /var/log/auth.log" | sudo tee -a /etc/fail2ban/jail.local
+            ;;
+    esac
+
+    sudo tee -a /etc/fail2ban/jail.local > /dev/null <<EOF
 
 [dropbear]
 enabled = false
