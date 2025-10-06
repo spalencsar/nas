@@ -265,26 +265,41 @@ restart_ssh_service() {
     log_info "Attempting to restart SSH service using available service name..."
 
     if systemctl list-unit-files --type=service | grep -q "^sshd.service"; then
-        if sudo systemctl restart sshd; then
+        log_info "Found sshd.service, attempting restart..."
+        if sudo systemctl restart sshd 2>&1; then
             log_success "sshd.service restarted successfully"
             return 0
         else
-            log_warning "Failed to restart sshd.service"
+            local exit_code=$?
+            log_warning "systemctl restart sshd failed with exit code $exit_code"
+            # Check if service is actually running despite the error
+            if sudo systemctl is-active --quiet sshd; then
+                log_success "sshd.service is running despite restart error"
+                return 0
+            fi
         fi
     fi
 
     if systemctl list-unit-files --type=service | grep -q "^ssh.service"; then
-        if sudo systemctl restart ssh; then
+        log_info "Found ssh.service, attempting restart..."
+        if sudo systemctl restart ssh 2>&1; then
             log_success "ssh.service restarted successfully"
             return 0
         else
-            log_warning "Failed to restart ssh.service"
+            local exit_code=$?
+            log_warning "systemctl restart ssh failed with exit code $exit_code"
+            # Check if service is actually running despite the error
+            if sudo systemctl is-active --quiet ssh; then
+                log_success "ssh.service is running despite restart error"
+                return 0
+            fi
         fi
     fi
 
-    # Fallback to service command
-    if command -v service >/dev/null 2>&1; then
-        if sudo service ssh restart; then
+    # Fallback to service command (deprecated on openSUSE, skip)
+    if [[ "$DISTRO" != "opensuse" ]] && command -v service >/dev/null 2>&1; then
+        log_info "Trying legacy service command..."
+        if sudo service ssh restart 2>&1; then
             log_success "SSH restarted via service ssh restart"
             return 0
         else
