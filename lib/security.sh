@@ -5,8 +5,14 @@
 secure_shared_memory() {
     log_info "Securing shared memory..."
     handle_error sudo cp /etc/fstab /etc/fstab.bak
-    echo "tmpfs /run/shm tmpfs defaults,noexec,nosuid 0 0" | sudo tee -a /etc/fstab
-    handle_error sudo mount -o remount /run/shm
+    
+    # Use /dev/shm for shared memory mount point (more compatible across distributions)
+    echo "tmpfs /dev/shm tmpfs defaults,noexec,nosuid 0 0" | sudo tee -a /etc/fstab
+    
+    # Ensure mount point exists
+    sudo mkdir -p /dev/shm
+    
+    handle_error sudo mount -o remount /dev/shm
     log_success "Shared memory secured."
 }
 
