@@ -31,6 +31,9 @@ install_fail2ban() {
             ;;
         opensuse)
             handle_error sudo zypper install -y fail2ban
+            # On openSUSE, Fail2ban has issues with systemd backend, skip it for now
+            log_warning "Fail2ban on openSUSE may have compatibility issues. Consider manual configuration."
+            return 0
             ;;
         *)
             log_error "Unsupported Linux distribution: $DISTRO"
