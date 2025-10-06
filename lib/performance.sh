@@ -292,27 +292,32 @@ perform_health_check() {
         echo
         
         echo "=== Service Status ==="
-        # Check services based on distribution
-        case $DISTRO in
-            opensuse)
-                services_to_check="sshd smb nmb fail2ban"
-                ;;
-            *)
-                services_to_check="ssh sshd smb nmb fail2ban"
-                ;;
-        esac
+        # Check services based on what was configured/installed
+        local services_to_check=("ssh" "sshd")
         
-        # Always check docker if installed
+        # Samba services
+        if [[ "${INSTALL_SAMBA:-true}" == "true" ]]; then
+            case $DISTRO in
+                opensuse)
+                    services_to_check+=("smb" "nmb")
+                    ;;
+                *)
+                    services_to_check+=("smbd" "nmbd")
+                    ;;
+            esac
+        fi
+        
+        # Docker
         if [[ "${INSTALL_DOCKER:-false}" == "true" ]]; then
-            services_to_check="$services_to_check docker"
+            services_to_check+=("docker")
         fi
         
-        # Check netdata if installed
+        # Netdata
         if [[ "${INSTALL_NETDATA:-false}" == "true" ]]; then
-            services_to_check="$services_to_check netdata"
+            services_to_check+=("netdata")
         fi
         
-        for service in $services_to_check; do
+        for service in "${services_to_check[@]}"; do
             if systemctl is-active --quiet "$service" 2>/dev/null; then
                 echo "✅ $service: Active"
             else
@@ -334,10 +339,15 @@ perform_health_check() {
         echo
         
         echo "=== Security Status ==="
-        if systemctl is-active --quiet fail2ban; then
-            echo "✅ Fail2ban: Active"
+        # Check Fail2ban if SSH was configured (which includes Fail2ban)
+        if [[ "${CONFIGURE_SSH:-true}" == "true" ]]; then
+            if systemctl is-active --quiet fail2ban; then
+                echo "✅ Fail2ban: Active"
+            else
+                echo "❌ Fail2ban: Inactive"
+            fi
         else
-            echo "❌ Fail2ban: Inactive"
+            echo "ℹ️ Fail2ban: Not configured"
         fi
         echo
         
