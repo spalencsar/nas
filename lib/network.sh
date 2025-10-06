@@ -319,11 +319,21 @@ EOF
     sudo smbpasswd -e "${ADMIN_USER:-$USER}"
     
     # Start and enable Samba services
-    sudo systemctl enable smbd nmbd
-    if sudo systemctl restart smbd nmbd; then
+    case $DISTRO in
+        ubuntu|debian|fedora|arch)
+            sudo systemctl enable smbd nmbd
+            sudo systemctl restart smbd nmbd
+            ;;
+        opensuse)
+            sudo systemctl enable smb nmb
+            sudo systemctl restart smb nmb
+            ;;
+    esac
+    
+    if sudo systemctl is-active smb >/dev/null 2>&1 && sudo systemctl is-active nmb >/dev/null 2>&1; then
         log_success "Samba configured and started successfully"
         log_info "Shared folder created at: $share_dir"
-        add_rollback_action "sudo systemctl stop smbd nmbd && sudo systemctl disable smbd nmbd"
+        add_rollback_action "sudo systemctl stop smb nmb && sudo systemctl disable smb nmb"
         return 0
     else
         log_error "Failed to start Samba services"
